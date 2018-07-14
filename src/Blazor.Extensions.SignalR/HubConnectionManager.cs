@@ -14,7 +14,7 @@ namespace Blazor.Extensions
 
         public static void On(string connectionId, string methodName) => RegisteredFunction.Invoke<object>(ON_METHOD, connectionId, methodName);
 
-        public static Task Dispatch(string connectionId, string methodName, object payload) => _connections[connectionId].Dispatch(methodName, payload);
+        public static Task Dispatch(MessagePacket messagePacket) => _connections[messagePacket.ConnectionId].Dispatch(messagePacket);
 
         public static void AddConnection(HubConnection connection)
         {

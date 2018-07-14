@@ -1,5 +1,6 @@
 import * as signalR from "@aspnet/signalr";
 import { BlazorType, MethodIdentifier, TypeIdentifier } from './BlazorTypes';
+import { ConnectionOperation, MessagePacket } from './MessageTypes';
 
 export class HubConnectionManager {
   private _hubConnections: Map<string, signalR.HubConnection> = new Map<string, signalR.HubConnection>();
@@ -22,29 +23,25 @@ export class HubConnectionManager {
     this._hubConnections.delete(connectionId);
   }
 
-  public startConnection(connectionId: string): Promise<void> {
-    const connection = this.getConnection(connectionId);
+  public startConnection = (connectionOperation: ConnectionOperation): Promise<void> => {
+    console.log(connectionOperation);
+    const connection = this.getConnection(connectionOperation.connectionId);
 
     return connection.start();
   }
 
-  public stopConnection(connectionId: string): Promise<void> {
-    const connection = this.getConnection(connectionId);
+  public stopConnection = (connectionOperation: ConnectionOperation): Promise<void> => {
+    const connection = this.getConnection(connectionOperation.connectionId);
 
     return connection.stop();
   }
 
-  private getConnection(connectionId: string) {
-    console.log(connectionId);
-    console.log(this._hubConnections);
+  private getConnection = (connectionId: string) => {
+    //console.log(connectionId);
+    //console.log(this._hubConnections);
     if (!connectionId) throw new Error('Invalid connectionId.');
-    if (this._hubConnections.has(connectionId)) {
-      console.log(true);
-    } else {
-      console.log(false);
-    }
     const connection = this._hubConnections.get(connectionId);
-    console.log(connection);
+    //console.log(connection);
     if (!connection) throw new Error('Invalid connection.');
 
     return connection;
@@ -67,7 +64,7 @@ export class HubConnectionManager {
         method: {
           name: 'Dispatch'
         }
-      }, connectionId, methodName, payload);
+      }, { connectionId: connectionId, methodName: methodName, payload: payload });
   }
 
   public static initialize() {
@@ -90,12 +87,12 @@ export class HubConnectionManager {
       return window["BlazorExtensions"].HubConnectionManager.removeConnection(connectionId);
     });
 
-    Blazor.registerFunction('Blazor.Extensions.SignalR.StartConnection', (connectionId: string) => {
-      return window["BlazorExtensions"].HubConnectionManager.startConnection(connectionId);
+    Blazor.registerFunction('Blazor.Extensions.SignalR.StartConnection', (connectionOperation: ConnectionOperation) => {
+      return window["BlazorExtensions"].HubConnectionManager.startConnection(connectionOperation);
     });
 
-    Blazor.registerFunction('Blazor.Extensions.SignalR.StopConnection', (connectionId: string) => {
-      return window["BlazorExtensions"].HubConnectionManager.stopConnection(connectionId);
+    Blazor.registerFunction('Blazor.Extensions.SignalR.StopConnection', (connectionOperation: ConnectionOperation) => {
+      return window["BlazorExtensions"].HubConnectionManager.stopConnection(connectionOperation);
     });
 
     Blazor.registerFunction('Blazor.Extensions.SignalR.On', (connectionId: string, methodName: string) => {

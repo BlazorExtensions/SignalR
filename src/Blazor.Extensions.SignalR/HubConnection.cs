@@ -13,7 +13,7 @@ namespace Blazor.Extensions
         internal HttpConnectionOptions Options { get; }
         internal string InternalConnectionId { get; }
 
-        private Dictionary<string, Func<object, Task>> _handlers = new Dictionary<string, Func<object, Task>>();
+        private Dictionary<string, Func<MessagePacket, Task>> _handlers = new Dictionary<string, Func<MessagePacket, Task>>();
 
         public HubConnection(string url, HttpConnectionOptions options)
         {
@@ -23,21 +23,21 @@ namespace Blazor.Extensions
             HubConnectionManager.AddConnection(this);
         }
 
-        public Task StartAsync() => RegisteredFunction.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);
-        public Task StopAsync() => RegisteredFunction.InvokeAsync<object>(STOP_CONNECTION_METHOD, this.InternalConnectionId);
+        public Task StartAsync() => Task.FromResult(RegisteredFunction.Invoke<object>(START_CONNECTION_METHOD, new ConnectionOperation { ConnectionId = this.InternalConnectionId }));
+        public Task StopAsync() => RegisteredFunction.InvokeAsync<object>(STOP_CONNECTION_METHOD, new ConnectionOperation { ConnectionId = this.InternalConnectionId });
 
-        public void On(string methodName, Func<object, Task> handler)
+        public void On(string methodName, Func<MessagePacket, Task> handler)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
             this._handlers[methodName] = handler ?? throw new ArgumentNullException(nameof(handler));
             HubConnectionManager.On(this.InternalConnectionId, methodName);
         }
 
-        internal Task Dispatch(string methodName, object payload)
+        internal Task Dispatch(MessagePacket messagePacket)
         {
-            if (this._handlers.TryGetValue(methodName, out var handler))
+            if (this._handlers.TryGetValue(messagePacket.MethodName, out var handler))
             {
-                return handler(payload);
+                return handler(messagePacket);
             }
 
             return Task.CompletedTask;

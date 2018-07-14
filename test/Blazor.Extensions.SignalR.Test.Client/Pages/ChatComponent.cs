@@ -20,7 +20,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         protected override async Task OnInitAsync()
         {
             this._connection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:59663/chathub",
+                .WithUrl("/chathub",
                 opt =>
                 {
                     opt.LogLevel = SignalRLogLevel.Trace;
@@ -28,12 +28,12 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
                 })
                 .Build();
             
-            this._connection.On("MessageArrived", this.Handle);
+            this._connection.On(MessagePacket.METHOD_NAME, this.Handle);
             await this._connection.StartAsync();
             this._logger.LogInformation("OnInit completed.");
         }
 
-        private Task Handle(object msg)
+        private Task Handle(MessagePacket msg)
         {
             this._logger.LogInformation(msg);
 
