@@ -1,0 +1,43 @@
+@page "/chat"
+@inherits ChatComponent
+
+<h4>To Everybody</h4>
+<form class="form-inline">
+    <div class="input-append">
+        <input type="text" id="message-text" placeholder="Type a message, name or group" bind=@_toEverybody />
+        <input type="button" id="broadcast" class="btn" value="Broadcast" />
+        <input type="button" id="broadcast-exceptme" class="btn" value="Broadcast (Others)" />
+    </div>
+</form>
+
+<h4>To Connection</h4>
+<form class="form-inline">
+    <div class="input-prepend input-append">
+        <input type="text" name="connection-message" id="connection-message-text" placeholder="Type a message" bind=@_toConnection />
+        <input type="text" name="connection-id" id="connection-id" placeholder="Type a connection id" bind=@_connectionId />
+        <input type="button" id="connection-send" class="btn" value="Send to Connection" />
+    </div>
+</form>
+
+<h4>To Me</h4>
+<form class="form-inline">
+    <div class="input-append">
+        <input type="text" id="me-message-text" placeholder="Type a message" bind=@_toMe />
+        <input type="button" id="send" class="btn" value="Send to Me" />
+    </div>
+</form>
+
+<h4>Group Actions</h4>
+<form class="form-inline">
+    <div class="input-prepend input-append">
+        <input type="text" name="group-message" id="group-message-text" placeholder="Type a message" bind=@_toGroup />
+        <input type="text" name="group-name" id="group-name" placeholder="Type a group name" bind=@_groupName />
+        <input type="button" id="groupmsg" class="btn" value="Send to Group" />
+        <input type="button" id="others-groupmsg" class="btn" value="Send to Others in Group" />
+        <input type="button" id="join-group" class="btn" value="Join Group" />
+        <input type="button" id="leave-group" class="btn" value="Leave Group" />
+
+    </div>
+</form>
+
+<ul id="message-list"></ul>
