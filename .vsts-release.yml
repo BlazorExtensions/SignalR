@@ -29,7 +29,7 @@ steps:
     inputs:
       command: push
       packagesToPush: '$(build.artifactStagingDirectory)/*.nupkg'
-      publishFeedCredentials: 'OSS'
+      publishFeedCredentials: 'BlazorExtensions'
       nuGetFeedType: external
       versioningScheme: byEnvVar
       versionEnvVar: Version
