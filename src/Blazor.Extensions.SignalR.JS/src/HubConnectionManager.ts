@@ -33,7 +33,21 @@ export class HubConnectionManager {
   }
 
   public startConnection = (connectionId: string): Promise<void> => {
+    const Blazor: BlazorType = window["Blazor"];
     const connection = this.getConnection(connectionId);
+
+    connection.onclose(async err => {
+      await Blazor.invokeDotNetMethodAsync(
+        {
+          type: {
+            assembly: 'Blazor.Extensions.SignalR',
+            name: 'Blazor.Extensions.HubConnectionManager'
+          },
+          method: {
+            name: 'OnClose'
+          }
+        }, connectionId, JSON.stringify(err));
+    });
 
     return connection.start();
   }

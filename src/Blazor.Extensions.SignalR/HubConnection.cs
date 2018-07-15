@@ -16,6 +16,7 @@ namespace Blazor.Extensions
         internal string InternalConnectionId { get; }
 
         private Dictionary<string, Func<object, Task>> _handlers = new Dictionary<string, Func<object, Task>>();
+        private Func<Exception, Task> _errorHandler;
 
         public HubConnection(string url, HttpConnectionOptions options, bool addMessagePack)
         {
@@ -24,6 +25,8 @@ namespace Blazor.Extensions
             this.InternalConnectionId = Guid.NewGuid().ToString();
             HubConnectionManager.AddConnection(this, addMessagePack);
         }
+
+        internal Task OnClose(string error) => this._errorHandler?.Invoke(new Exception(error));
 
         public Task StartAsync() => RegisteredFunction.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);
         public Task StopAsync() => RegisteredFunction.InvokeAsync<object>(STOP_CONNECTION_METHOD, this.InternalConnectionId);
@@ -34,6 +37,8 @@ namespace Blazor.Extensions
             this._handlers[methodName] = handler ?? throw new ArgumentNullException(nameof(handler));
             HubConnectionManager.On(this.InternalConnectionId, methodName);
         }
+
+        public void OnClose(Func<Exception, Task> handler) => this._errorHandler = handler;
 
         public Task InvokeAsync(string methodName, params object[] args) =>
             RegisteredFunction.InvokeAsync<object>(INVOKE_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
