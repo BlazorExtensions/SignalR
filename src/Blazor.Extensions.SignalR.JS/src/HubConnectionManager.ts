@@ -1,47 +1,64 @@
 import * as signalR from "@aspnet/signalr";
+import * as sianglRMessagePack from "@aspnet/signalr-protocol-msgpack";
 import { BlazorType, MethodIdentifier, TypeIdentifier } from './BlazorTypes';
-import { ConnectionOperation, MessagePacket } from './MessageTypes';
 
 export class HubConnectionManager {
   private _hubConnections: Map<string, signalR.HubConnection> = new Map<string, signalR.HubConnection>();
 
-  public createConnection(connectionId: string, url: string, transportOptions: signalR.IHttpConnectionOptions) {
+  public createConnection(connectionId: string, url: string, transportOptions: signalR.IHttpConnectionOptions, addMessagePack: boolean) {
     if (!connectionId) throw new Error('Invalid connectionId.');
     if (!url) throw new Error('Invalid hub url.');
     if (!transportOptions) throw new Error('Invalid transport options.');
 
     if (this._hubConnections[connectionId]) return;
 
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl(url, transportOptions)
-      .build();
+    if (addMessagePack) {
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl(url, transportOptions)
+        .withHubProtocol(new sianglRMessagePack.MessagePackHubProtocol())
+        .build();
 
-    this._hubConnections.set(connectionId, connection);
+      this._hubConnections.set(connectionId, connection);
+    } else {
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl(url, transportOptions)
+        .build();
+
+      this._hubConnections.set(connectionId, connection);
+    }
   }
 
   public removeConnection(connectionId: string) {
     this._hubConnections.delete(connectionId);
   }
 
-  public startConnection = (connectionOperation: ConnectionOperation): Promise<void> => {
-    console.log(connectionOperation);
-    const connection = this.getConnection(connectionOperation.connectionId);
+  public startConnection = (connectionId: string): Promise<void> => {
+    const connection = this.getConnection(connectionId);
 
     return connection.start();
   }
 
-  public stopConnection = (connectionOperation: ConnectionOperation): Promise<void> => {
-    const connection = this.getConnection(connectionOperation.connectionId);
+  public stopConnection = (connectionId: string): Promise<void> => {
+    const connection = this.getConnection(connectionId);
 
     return connection.stop();
   }
 
+  public invokeAsync = (connectionId: string, methodName: string, ...args: any[]): Promise<void> => {
+    const connection = this.getConnection(connectionId);
+
+    return connection.invoke(methodName, ...args);
+  }
+
+  public invokeWithResultAsync = (connectionId: string, methodName: string, ...args: any[]): Promise<any> => {
+    const connection = this.getConnection(connectionId);
+
+    return connection.invoke(methodName, ...args);
+  }
+
   private getConnection = (connectionId: string) => {
-    //console.log(connectionId);
-    //console.log(this._hubConnections);
     if (!connectionId) throw new Error('Invalid connectionId.');
     const connection = this._hubConnections.get(connectionId);
-    //console.log(connection);
     if (!connection) throw new Error('Invalid connection.');
 
     return connection;
@@ -59,19 +76,19 @@ export class HubConnectionManager {
       {
         type: {
           assembly: 'Blazor.Extensions.SignalR',
-          name: 'HubConnectionManager'
+          name: 'Blazor.Extensions.HubConnectionManager'
         },
         method: {
           name: 'Dispatch'
         }
-      }, { connectionId: connectionId, methodName: methodName, payload: payload });
+      }, connectionId, methodName, payload);
   }
 
   public static initialize() {
     const Blazor: BlazorType = window["Blazor"];
     window["BlazorExtensions"].HubConnectionManager = new HubConnectionManager();
 
-    Blazor.registerFunction('Blazor.Extensions.SignalR.CreateConnection', (connectionId: string, url: string, httpConnectionOptions: any) => {
+    Blazor.registerFunction('Blazor.Extensions.SignalR.CreateConnection', (connectionId: string, url: string, httpConnectionOptions: any, addMessagePack: boolean) => {
       window["BlazorExtensions"].HubConnectionManager.createConnection(connectionId, url,
         {
           logger: httpConnectionOptions.LogLevel,
@@ -79,7 +96,7 @@ export class HubConnectionManager {
           logMessageContent: httpConnectionOptions.LogMessageContent,
           skipNegotiation: httpConnectionOptions.SkipNegotiation,
           accessTokenFactory: () => httpConnectionOptions.AccessToken
-        });
+        }, addMessagePack);
       return true;
     });
 
@@ -87,12 +104,36 @@ export class HubConnectionManager {
       return window["BlazorExtensions"].HubConnectionManager.removeConnection(connectionId);
     });
 
-    Blazor.registerFunction('Blazor.Extensions.SignalR.StartConnection', (connectionOperation: ConnectionOperation) => {
-      return window["BlazorExtensions"].HubConnectionManager.startConnection(connectionOperation);
+    Blazor.registerFunction('Blazor.Extensions.SignalR.StartConnection', (connectionId: string) => {
+      //TODO remove this parse after Blazor fixed the async args json parsing code
+      const parsedConnectionId = JSON.parse(connectionId);
+
+      return window["BlazorExtensions"].HubConnectionManager.startConnection(parsedConnectionId);
     });
 
-    Blazor.registerFunction('Blazor.Extensions.SignalR.StopConnection', (connectionOperation: ConnectionOperation) => {
-      return window["BlazorExtensions"].HubConnectionManager.stopConnection(connectionOperation);
+    Blazor.registerFunction('Blazor.Extensions.SignalR.StopConnection', (connectionId: string) => {
+      //TODO remove this parse after Blazor fixed the async args json parsing code
+      const parsedConnectionId = JSON.parse(connectionId);
+
+      return window["BlazorExtensions"].HubConnectionManager.stopConnection(parsedConnectionId);
+    });
+
+    Blazor.registerFunction('Blazor.Extensions.SignalR.InvokeAsync', (connectionId: string, methodName: string, args: any) => {
+      //TODO remove this parse after Blazor fixed the async args json parsing code
+      const parsedConnectionId = JSON.parse(connectionId);
+      const parsedMethodName = JSON.parse(methodName);
+      const parsedArgs = JSON.parse(args);
+
+      return window["BlazorExtensions"].HubConnectionManager.invokeAsync(parsedConnectionId, parsedMethodName, ...parsedArgs);
+    });
+
+    Blazor.registerFunction('Blazor.Extensions.SignalR.InvokeWithResultAsync', (connectionId: string, methodName: string, args: any) => {
+      //TODO remove this parse after Blazor fixed the async args json parsing code
+      const parsedConnectionId = JSON.parse(connectionId);
+      const parsedMethodName = JSON.parse(methodName);
+      const parsedArgs = JSON.parse(args);
+
+      return window["BlazorExtensions"].HubConnectionManager.invokeWithResultAsync(parsedConnectionId, parsedMethodName, ...parsedArgs);
     });
 
     Blazor.registerFunction('Blazor.Extensions.SignalR.On', (connectionId: string, methodName: string) => {

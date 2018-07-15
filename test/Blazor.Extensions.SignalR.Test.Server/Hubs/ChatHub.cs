@@ -1,38 +1,63 @@
 using Microsoft.AspNetCore.SignalR;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Blazor.Extensions.SignalR.Test.Server.Hubs
 {
     public class ChatHub : Hub
     {
-        public async Task SendMessage(string user, string message)
-        {
-            await this.Clients.All.SendAsync("ReceiveMessage", user, message);
-        }
-
-        public Task SendMessageToCaller(string message)
-        {
-            return this.Clients.Caller.SendAsync("ReceiveMessage", message);
-        }
-
-        public Task SendMessageToGroups(string message)
-        {
-            List<string> groups = new List<string>() { "SignalR Users" };
-            return this.Clients.Groups(groups).SendAsync("ReceiveMessage", message);
-        }
-
         public override async Task OnConnectedAsync()
         {
-            await this.Groups.AddToGroupAsync(this.Context.ConnectionId, "SignalR Users");
-            await base.OnConnectedAsync();
+            await this.Clients.All.SendAsync("Send", $"{this.Context.ConnectionId} joined");
         }
 
-        public override async Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception ex)
         {
-            await this.Groups.RemoveFromGroupAsync(this.Context.ConnectionId, "SignalR Users");
-            await base.OnDisconnectedAsync(exception);
+            await this.Clients.Others.SendAsync("Send", $"{this.Context.ConnectionId} left");
+        }
+
+        public Task Send(string message)
+        {
+            return this.Clients.All.SendAsync("Send", $"{this.Context.ConnectionId}: {message}");
+        }
+
+        public Task SendToOthers(string message)
+        {
+            return this.Clients.Others.SendAsync("Send", $"{this.Context.ConnectionId}: {message}");
+        }
+
+        public Task SendToConnection(string connectionId, string message)
+        {
+            return this.Clients.Client(connectionId).SendAsync("Send", $"Private message from {this.Context.ConnectionId}: {message}");
+        }
+
+        public Task SendToGroup(string groupName, string message)
+        {
+            return this.Clients.Group(groupName).SendAsync("Send", $"{this.Context.ConnectionId}@{groupName}: {message}");
+        }
+
+        public Task SendToOthersInGroup(string groupName, string message)
+        {
+            return this.Clients.OthersInGroup(groupName).SendAsync("Send", $"{this.Context.ConnectionId}@{groupName}: {message}");
+        }
+
+        public async Task JoinGroup(string groupName)
+        {
+            await this.Groups.AddToGroupAsync(this.Context.ConnectionId, groupName);
+
+            await this.Clients.Group(groupName).SendAsync("Send", $"{this.Context.ConnectionId} joined {groupName}");
+        }
+
+        public async Task LeaveGroup(string groupName)
+        {
+            await this.Clients.Group(groupName).SendAsync("Send", $"{this.Context.ConnectionId} left {groupName}");
+
+            await this.Groups.RemoveFromGroupAsync(this.Context.ConnectionId, groupName);
+        }
+
+        public Task Echo(string message)
+        {
+            return this.Clients.Caller.SendAsync("Send", $"{this.Context.ConnectionId}: {message}");
         }
     }
 }

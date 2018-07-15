@@ -8,6 +8,7 @@ namespace Blazor.Extensions
 
         internal string Url { get; set; }
         internal HttpConnectionOptions Options { get; set; }
+        internal bool EnableMessagePack { get; set; }
 
         public HubConnection Build()
         {
@@ -19,7 +20,7 @@ namespace Blazor.Extensions
 
             this._hubConnectionBuilt = true;
 
-            return new HubConnection(this.Url, this.Options);
+            return new HubConnection(this.Url, this.Options, this.EnableMessagePack);
         }
     }
 
@@ -31,7 +32,7 @@ namespace Blazor.Extensions
         /// <summary>
         /// Configures the <see cref="HubConnection" /> to use HTTP-based transports to connect to the specified URL.
         /// </summary>
-        /// <param name="hubConnectionBuilder">The <see cref="IHubConnectionBuilder" /> to configure.</param>
+        /// <param name="hubConnectionBuilder">The <see cref="HubConnectionBuilder" /> to configure.</param>
         /// <param name="url">The URL the <see cref="HttpConnection"/> will use.</param>
         /// <returns>The same instance of the <see cref="HubConnectionBuilder"/> for chaining.</returns>
         public static HubConnectionBuilder WithUrl(this HubConnectionBuilder hubConnectionBuilder, string url, Action<HttpConnectionOptions> configureHttpOptions = null)
@@ -43,6 +44,18 @@ namespace Blazor.Extensions
             var opt = new HttpConnectionOptions();
             configureHttpOptions?.Invoke(opt);
             hubConnectionBuilder.Options = opt;
+            return hubConnectionBuilder;
+        }
+
+        /// <summary>
+        /// Enables the MessagePack protocol for SignalR.
+        /// </summary>
+        /// <param name="hubConnectionBuilder">The <see cref="HubConnectionBuilder"/> representing the SignalR server to add MessagePack protocol support to.</param>
+        /// <returns>The same instance of the <see cref="HubConnectionBuilder"/> for chaining.</returns>
+        public static HubConnectionBuilder AddMessagePackProtocol(this HubConnectionBuilder hubConnectionBuilder)
+        {
+            if (hubConnectionBuilder == null) throw new ArgumentNullException(nameof(hubConnectionBuilder));
+            hubConnectionBuilder.EnableMessagePack = true;
             return hubConnectionBuilder;
         }
     }

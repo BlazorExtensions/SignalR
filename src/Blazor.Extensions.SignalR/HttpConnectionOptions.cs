@@ -1,5 +1,3 @@
-using System;
-
 namespace Blazor.Extensions
 {
     public class HttpConnectionOptions

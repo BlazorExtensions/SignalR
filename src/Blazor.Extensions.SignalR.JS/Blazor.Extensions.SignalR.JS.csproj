@@ -23,7 +23,6 @@
   <ItemGroup>
     <WebpackInputs Remove="src\BlazorTypes.ts" />
     <WebpackInputs Remove="src\GlobalExports.ts" />
-    <WebpackInputs Remove="src\MessageTypes.ts" />
   </ItemGroup>
 
   <Target Name="EnsureNpmRestored" Condition="!Exists('node_modules')">
