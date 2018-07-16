@@ -26,7 +26,7 @@ namespace Blazor.Extensions
             HubConnectionManager.AddConnection(this, addMessagePack);
         }
 
-        internal Task OnClose(string error) => this._errorHandler?.Invoke(new Exception(error));
+        internal Task OnClose(string error) => this._errorHandler != null ? this._errorHandler(new Exception(error)) : Task.CompletedTask;
 
         public Task StartAsync() => RegisteredFunction.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);
         public Task StopAsync() => RegisteredFunction.InvokeAsync<object>(STOP_CONNECTION_METHOD, this.InternalConnectionId);
