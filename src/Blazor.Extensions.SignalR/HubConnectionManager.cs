@@ -16,10 +16,13 @@ namespace Blazor.Extensions
 
         public static Task Dispatch(string connectionId, string methodName, object payload) => _connections[connectionId].Dispatch(methodName, payload);
         public static Task OnClose(string connectionId, string error) => _connections[connectionId].OnClose(error);
+        public static Task<string> GetAccessToken(string connectionId) => _connections[connectionId].GetAccessToken();
 
-        public static void AddConnection(HubConnection connection, bool addMessagePack)
+        public static void AddConnection(HubConnection connection)
         {
-            RegisteredFunction.Invoke<object>(CREATE_CONNECTION_METHOD, connection.InternalConnectionId, connection.Url, connection.Options, addMessagePack);
+            RegisteredFunction.Invoke<object>(CREATE_CONNECTION_METHOD,
+                connection.InternalConnectionId,
+                new InternalHttpConnectionOptions(connection.Options));
             _connections[connection.InternalConnectionId] = connection;
         }
 

@@ -102,17 +102,47 @@ export class HubConnectionManager {
     const Blazor: BlazorType = window["Blazor"];
     window["BlazorExtensions"].HubConnectionManager = new HubConnectionManager();
 
-    Blazor.registerFunction('Blazor.Extensions.SignalR.CreateConnection', (connectionId: string, url: string, httpConnectionOptions: any, addMessagePack: boolean) => {
-      window["BlazorExtensions"].HubConnectionManager.createConnection(connectionId, url,
-        {
-          logger: httpConnectionOptions.LogLevel,
-          transport: httpConnectionOptions.Transport,
-          logMessageContent: httpConnectionOptions.LogMessageContent,
-          skipNegotiation: httpConnectionOptions.SkipNegotiation,
-          accessTokenFactory: () => httpConnectionOptions.AccessToken
-        }, addMessagePack);
-      return true;
-    });
+    Blazor.registerFunction('Blazor.Extensions.SignalR.CreateConnection',
+      (connectionId: string, httpConnectionOptions: any) => {
+        let options: any = {
+          logger: httpConnectionOptions.logLevel,
+          transport: httpConnectionOptions.transport,
+          logMessageContent: httpConnectionOptions.logMessageContent,
+          skipNegotiation: httpConnectionOptions.skipNegotiation
+        };
+
+        if (httpConnectionOptions.hasAccessTokenFactory) {
+          options.accessTokenFactory = () => {
+            return new Promise<string>(async (resolve, reject) => {
+              const token = await Blazor.invokeDotNetMethodAsync<string>(
+                {
+                  type: {
+                    assembly: 'Blazor.Extensions.SignalR',
+                    name: 'Blazor.Extensions.HubConnectionManager'
+                  },
+                  method: {
+                    name: 'GetAccessToken'
+                  }
+                }, connectionId);
+
+              if (token) {
+                resolve(token);
+              } else {
+                reject();
+              }
+            })
+          }
+        }
+
+        window["BlazorExtensions"].HubConnectionManager.createConnection(
+          connectionId,
+          httpConnectionOptions.url,
+          options,
+          httpConnectionOptions.enableMessagePack
+        );
+        return true;
+      }
+    );
 
     Blazor.registerFunction('Blazor.Extensions.SignalR.RemoveConnection', (connectionId: string) => {
       return window["BlazorExtensions"].HubConnectionManager.removeConnection(connectionId);

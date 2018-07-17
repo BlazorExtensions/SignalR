@@ -2,12 +2,14 @@ using Blazor.Extensions.Logging;
 using Microsoft.AspNetCore.Blazor.Components;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Blazor.Extensions.SignalR.Test.Client.Pages
 {
     public class ChatComponent : BlazorComponent
     {
+        [Inject] private HttpClient _http { get; set; }
         [Inject] private ILogger<ChatComponent> _logger { get; set; }
         internal string _toEverybody { get; set; }
         internal string _toConnection { get; set; }
@@ -27,11 +29,24 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
                 {
                     opt.LogLevel = SignalRLogLevel.Trace;
                     opt.Transport = HttpTransportType.WebSockets;
+                    opt.AccessTokenProvider = async () =>
+                    {
+                        var token = await this.GetJwtToken("DemoUser");
+                        this._logger.LogInformation($"Access Token: {token}");
+                        return token;
+                    };
                 })
                 .Build();
 
             this._connection.On("Send", this.Handle);
             await this._connection.StartAsync();
+        }
+
+        private async Task<string> GetJwtToken(string userId)
+        {
+            var httpResponse = await this._http.GetAsync($"/generatetoken?user={userId}");
+            httpResponse.EnsureSuccessStatusCode();
+            return await httpResponse.Content.ReadAsStringAsync();
         }
 
         private Task Handle(object msg)
