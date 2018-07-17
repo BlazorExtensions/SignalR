@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Threading.Tasks;
 
 namespace Blazor.Extensions.SignalR.Test.Server.Hubs
 {
+    [Authorize(JwtBearerDefaults.AuthenticationScheme)]
     public class ChatHub : Hub
     {
         public override async Task OnConnectedAsync()

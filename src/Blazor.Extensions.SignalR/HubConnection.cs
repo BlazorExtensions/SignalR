@@ -11,21 +11,20 @@ namespace Blazor.Extensions
         private const string STOP_CONNECTION_METHOD = "Blazor.Extensions.SignalR.StopConnection";
         private const string INVOKE_ASYNC_METHOD = "Blazor.Extensions.SignalR.InvokeAsync";
         private const string INVOKE_WITH_RESULT_ASYNC_METHOD = "Blazor.Extensions.SignalR.InvokeWithResultAsync";
-        internal string Url { get; }
         internal HttpConnectionOptions Options { get; }
         internal string InternalConnectionId { get; }
 
         private Dictionary<string, Func<object, Task>> _handlers = new Dictionary<string, Func<object, Task>>();
         private Func<Exception, Task> _errorHandler;
 
-        public HubConnection(string url, HttpConnectionOptions options, bool addMessagePack)
+        public HubConnection(HttpConnectionOptions options)
         {
-            this.Url = url;
             this.Options = options;
             this.InternalConnectionId = Guid.NewGuid().ToString();
-            HubConnectionManager.AddConnection(this, addMessagePack);
+            HubConnectionManager.AddConnection(this);
         }
 
+        internal Task<string> GetAccessToken() => this.Options.AccessTokenProvider != null ? this.Options.AccessTokenProvider() : null;
         internal Task OnClose(string error) => this._errorHandler != null ? this._errorHandler(new Exception(error)) : Task.CompletedTask;
 
         public Task StartAsync() => RegisteredFunction.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);

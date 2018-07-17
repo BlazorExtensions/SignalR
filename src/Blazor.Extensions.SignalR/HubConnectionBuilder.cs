@@ -6,9 +6,7 @@ namespace Blazor.Extensions
     {
         private bool _hubConnectionBuilt;
 
-        internal string Url { get; set; }
-        internal HttpConnectionOptions Options { get; set; }
-        internal bool EnableMessagePack { get; set; }
+        internal HttpConnectionOptions Options { get; set; } = new HttpConnectionOptions();
 
         public HubConnection Build()
         {
@@ -20,7 +18,7 @@ namespace Blazor.Extensions
 
             this._hubConnectionBuilt = true;
 
-            return new HubConnection(this.Url, this.Options, this.EnableMessagePack);
+            return new HubConnection(this.Options);
         }
     }
 
@@ -40,10 +38,8 @@ namespace Blazor.Extensions
             if (hubConnectionBuilder == null) throw new ArgumentNullException(nameof(hubConnectionBuilder));
             if (string.IsNullOrWhiteSpace(url)) throw new ArgumentNullException(nameof(url));
 
-            hubConnectionBuilder.Url = url;
-            var opt = new HttpConnectionOptions();
-            configureHttpOptions?.Invoke(opt);
-            hubConnectionBuilder.Options = opt;
+            hubConnectionBuilder.Options.Url = url;
+            configureHttpOptions?.Invoke(hubConnectionBuilder.Options);
             return hubConnectionBuilder;
         }
 
@@ -55,7 +51,7 @@ namespace Blazor.Extensions
         public static HubConnectionBuilder AddMessagePackProtocol(this HubConnectionBuilder hubConnectionBuilder)
         {
             if (hubConnectionBuilder == null) throw new ArgumentNullException(nameof(hubConnectionBuilder));
-            hubConnectionBuilder.EnableMessagePack = true;
+            hubConnectionBuilder.Options.EnableMessagePack = true;
             return hubConnectionBuilder;
         }
     }
