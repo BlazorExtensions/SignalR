@@ -13,8 +13,9 @@
 <h4>To Everybody</h4>
 <form class="form-inline">
     <div class="input-append">
-        <input type="text" id="me-message-text" placeholder="Type a message" bind=@_toMe />
-        <input type="button" id="send" class="btn" value="Send to Me" onclick=@SendToMe />
+        <input type="text" id="message-text" placeholder="Type a message" bind=@_toEverybody />
+        <input type="button" id="broadcast" class="btn" value="Broadcast" onclick=@Broadcast />
+        <input type="button" id="broadcast-exceptme" class="btn" value="Broadcast (Others)" onclick=@SendToOthers />
     </div>
 </form>
 
