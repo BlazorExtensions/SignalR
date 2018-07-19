@@ -1,7 +1,9 @@
+using Blazor.Extensions.SignalR.Test.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Blazor.Extensions.SignalR.Test.Server.Hubs
@@ -9,6 +11,12 @@ namespace Blazor.Extensions.SignalR.Test.Server.Hubs
     [Authorize(JwtBearerDefaults.AuthenticationScheme)]
     public class ChatHub : Hub
     {
+        public async Task DoSomething()
+        {
+            await this.Clients.All.SendAsync("DemoMethodObject", new DemoData { Id = 1, Data = "Demo Data" });
+            await this.Clients.All.SendAsync("DemoMethodList", Enumerable.Range(1, 10).Select(x => new DemoData { Id = x, Data = $"Demo Data #{x}" }).ToList());
+        }
+
         public override async Task OnConnectedAsync()
         {
             await this.Clients.All.SendAsync("Send", $"{this.Context.ConnectionId} joined");

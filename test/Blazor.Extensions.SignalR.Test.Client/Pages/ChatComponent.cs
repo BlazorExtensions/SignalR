@@ -1,6 +1,7 @@
 using Blazor.Extensions.Logging;
 using Microsoft.AspNetCore.Blazor.Components;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -19,6 +20,8 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         internal string _groupName { get; set; }
         internal List<string> _messages { get; set; } = new List<string>();
 
+        private IDisposable _objectHandle;
+        private IDisposable _listHandle;
         private HubConnection _connection;
 
         protected override async Task OnInitAsync()
@@ -38,8 +41,31 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
                 })
                 .Build();
 
-            this._connection.On("Send", this.Handle);
+            this._connection.On<string>("Send", this.Handle);
+            this._connection.OnClose(exc =>
+            {
+                this._logger.LogError(exc, "Connection was closed!");
+                return Task.CompletedTask;
+            });
             await this._connection.StartAsync();
+        }
+
+        public Task DemoMethodObject(object data)
+        {
+            this._logger.LogInformation("Got object!");
+            this._logger.LogInformation(data?.GetType().FullName ?? "<NULL>");
+            this._objectHandle.Dispose();
+            if (data == null) return Task.CompletedTask;
+            return this.Handle(data);
+        }
+
+        public Task DemoMethodList(object data)
+        {
+            this._logger.LogInformation("Got List!");
+            this._logger.LogInformation(data?.GetType().FullName ?? "<NULL>");
+            this._listHandle.Dispose();
+            if (data == null) return Task.CompletedTask;
+            return this.Handle(data);
         }
 
         private async Task<string> GetJwtToken(string userId)
@@ -95,6 +121,13 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         internal async Task LeaveGroup()
         {
             await this._connection.InvokeAsync("LeaveGroup", this._groupName);
+        }
+
+        internal async Task TellHubToDoStuff()
+        {
+            this._objectHandle = this._connection.On<DemoData>("DemoMethodObject", this.DemoMethodObject);
+            this._listHandle = this._connection.On<DemoData[]>("DemoMethodList", this.DemoMethodList);
+            await this._connection.InvokeAsync("DoSomething");
         }
     }
 }

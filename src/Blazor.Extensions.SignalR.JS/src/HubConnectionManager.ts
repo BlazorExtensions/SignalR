@@ -4,6 +4,7 @@ import { BlazorType, MethodIdentifier, TypeIdentifier } from './BlazorTypes';
 
 export class HubConnectionManager {
   private _hubConnections: Map<string, signalR.HubConnection> = new Map<string, signalR.HubConnection>();
+  private _handles: Map<string, (payload: any) => Promise<void>> = new Map<string, (payload: any) => Promise<void>>();
 
   public createConnection(connectionId: string, url: string, transportOptions: signalR.IHttpConnectionOptions, addMessagePack: boolean) {
     if (!connectionId) throw new Error('Invalid connectionId.');
@@ -78,12 +79,23 @@ export class HubConnectionManager {
     return connection;
   }
 
-  private on(connectionId: string, methodName: string) {
+  private on(connectionId: string, methodName: string, handleId: string) {
     const connection = this.getConnection(connectionId);
-    connection.on(methodName, (payload) => this.onHandler(connectionId, methodName, payload));
+    const handle = (payload) => this.onHandler(connectionId, methodName, handleId, payload);
+    this._handles.set(handleId, handle);
+    connection.on(methodName, handle);
   }
 
-  private async onHandler(connectionId: string, methodName: string, payload: any) {
+  private off(connectionId: string, methodName: string, handleId: string) {
+    const connection = this.getConnection(connectionId);
+    const handle = this._handles.get(handleId);
+    if (handle) {
+      connection.off(methodName, handle);
+      this._handles.delete(handleId);
+    }    
+  }
+
+  private async onHandler(connectionId: string, methodName: string, handleId: string, payload: any) {
     const Blazor: BlazorType = window["Blazor"];
 
     await Blazor.invokeDotNetMethodAsync(
@@ -95,7 +107,7 @@ export class HubConnectionManager {
         method: {
           name: 'Dispatch'
         }
-      }, connectionId, methodName, payload);
+      }, connectionId, methodName, handleId, JSON.stringify(payload));
   }
 
   public static initialize() {
@@ -180,8 +192,12 @@ export class HubConnectionManager {
       return window["BlazorExtensions"].HubConnectionManager.invokeWithResultAsync(parsedConnectionId, parsedMethodName, ...parsedArgs);
     });
 
-    Blazor.registerFunction('Blazor.Extensions.SignalR.On', (connectionId: string, methodName: string) => {
-      return window["BlazorExtensions"].HubConnectionManager.on(connectionId, methodName);
+    Blazor.registerFunction('Blazor.Extensions.SignalR.On', (connectionId: string, methodName: string, handleId: string) => {
+      return window["BlazorExtensions"].HubConnectionManager.on(connectionId, methodName, handleId);
+    });
+
+    Blazor.registerFunction('Blazor.Extensions.SignalR.Off', (connectionId: string, methodName: string, handleId: string) => {
+      return window["BlazorExtensions"].HubConnectionManager.off(connectionId, methodName, handleId);
     });
   }
 }
