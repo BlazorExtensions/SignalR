@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Blazor;
 using Microsoft.AspNetCore.Blazor.Browser.Interop;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Blazor.Extensions
@@ -13,8 +15,9 @@ namespace Blazor.Extensions
         private const string INVOKE_WITH_RESULT_ASYNC_METHOD = "Blazor.Extensions.SignalR.InvokeWithResultAsync";
         internal HttpConnectionOptions Options { get; }
         internal string InternalConnectionId { get; }
-
-        private Dictionary<string, Func<object, Task>> _handlers = new Dictionary<string, Func<object, Task>>();
+        
+        private Dictionary<string, Dictionary<string, (SubscriptionHandle, Func<string, Task>)>> _handlers = new Dictionary<string, Dictionary<string, (SubscriptionHandle, Func<string, Task>)>>();
+        //private Dictionary<string, Func<string, Task>> _handlers = new Dictionary<string, Func<string, Task>>();
         private Func<Exception, Task> _errorHandler;
 
         public HubConnection(HttpConnectionOptions options)
@@ -30,11 +33,55 @@ namespace Blazor.Extensions
         public Task StartAsync() => RegisteredFunction.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);
         public Task StopAsync() => RegisteredFunction.InvokeAsync<object>(STOP_CONNECTION_METHOD, this.InternalConnectionId);
 
-        public void On(string methodName, Func<object, Task> handler)
+        public IDisposable On<TResult>(string methodName, Func<TResult, Task> handler)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
-            this._handlers[methodName] = handler ?? throw new ArgumentNullException(nameof(handler));
-            HubConnectionManager.On(this.InternalConnectionId, methodName);
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+
+            var subscriptionHandle = new SubscriptionHandle(methodName, this);
+            if (this._handlers.TryGetValue(methodName, out var methodHandlers))
+            {
+                methodHandlers[subscriptionHandle.HandleId] =
+                    (subscriptionHandle, (json) =>
+                    {
+                        var payload = JsonUtil.Deserialize<TResult>(json);
+                        return handler(payload);
+                    });
+            }
+            else
+            {
+                this._handlers[methodName] = new Dictionary<string, (SubscriptionHandle, Func<string, Task>)>
+                {
+                    {
+                        subscriptionHandle.HandleId,
+                        (subscriptionHandle, (json) =>
+                        {
+                            var payload = JsonUtil.Deserialize<TResult>(json);
+                            return handler(payload);
+                        })
+                    }
+                };
+            }
+            
+            HubConnectionManager.On(this.InternalConnectionId, subscriptionHandle);
+            return subscriptionHandle;
+        }
+
+        internal void RemoveHandle(string methodName, string handleId)
+        {
+            if (this._handlers.TryGetValue(methodName, out var handlers))
+            {
+                if (handlers.TryGetValue(handleId, out var handle))
+                {
+                    HubConnectionManager.Off(this.InternalConnectionId, handle.Item1);
+                    handlers.Remove(handleId);
+
+                    if (handlers.Count == 0)
+                    {
+                        this._handlers.Remove(methodName);
+                    }
+                }
+            }
         }
 
         public void OnClose(Func<Exception, Task> handler) => this._errorHandler = handler;
@@ -45,13 +92,15 @@ namespace Blazor.Extensions
         public Task<TResult> InvokeAsync<TResult>(string methodName, params object[] args) =>
             RegisteredFunction.InvokeAsync<TResult>(INVOKE_WITH_RESULT_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
 
-        internal Task Dispatch(string methodName, object payload)
+        internal Task Dispatch(string methodName, string handleId, string payload)
         {
-            if (this._handlers.TryGetValue(methodName, out var handler))
+            if (this._handlers.TryGetValue(methodName, out var handlers))
             {
-                return handler(payload);
+                if (handlers.TryGetValue(handleId, out var handle))
+                {
+                    return handle.Item2(payload);
+                }
             }
-
             return Task.CompletedTask;
         }
 
