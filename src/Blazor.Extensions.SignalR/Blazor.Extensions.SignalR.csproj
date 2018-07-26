@@ -5,18 +5,18 @@
   </PropertyGroup>
   <PropertyGroup>
     <OutputType>library</OutputType>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeP2POutput</TargetsForTfmSpecificBuildOutput>
-    <RootNamespace>Blazor.Extensions</RootNamespace>
+    <!--<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeP2POutput</TargetsForTfmSpecificBuildOutput>-->
+    <RootNamespace>Blazor.Extensions.SgnalR</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Blazor.Browser" Version="0.4.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Blazor.Browser" Version="0.5.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Blazor.Extensions.SignalR.JS\Blazor.Extensions.SignalR.JS.csproj" PrivateAssets="All" />
   </ItemGroup>
-  <Target Name="IncludeP2POutput">
+  <!--<Target Name="IncludeP2POutput">
     <ItemGroup>
       <BuildOutputInPackage Include="$(OutputPath)Blazor.Extensions.SignalR.JS.dll" />
     </ItemGroup>
-  </Target>
+  </Target>-->
 </Project>
