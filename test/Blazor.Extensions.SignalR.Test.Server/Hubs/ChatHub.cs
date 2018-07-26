@@ -21,11 +21,12 @@ namespace Blazor.Extensions.SignalR.Test.Server.Hubs
         {
             await this.Clients.All.SendAsync("Send", $"{this.Context.ConnectionId} joined");
         }
-
-        public override async Task OnDisconnectedAsync(Exception ex)
+        public override async Task OnDisconnectedAsync(Exception exception)
         {
             await this.Clients.Others.SendAsync("Send", $"{this.Context.ConnectionId} left");
+
         }
+
 
         public Task Send(string message)
         {
