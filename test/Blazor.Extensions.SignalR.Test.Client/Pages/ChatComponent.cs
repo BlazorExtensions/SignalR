@@ -30,8 +30,9 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
                 .WithUrl("/chathub",
                 opt =>
                 {
-                    opt.LogLevel = SignalRLogLevel.Trace;
+                    opt.LogLevel = SignalRLogLevel.None;
                     opt.Transport = HttpTransportType.WebSockets;
+                    opt.SkipNegotiation = true;
                     opt.AccessTokenProvider = async () =>
                     {
                         var token = await this.GetJwtToken("DemoUser");
@@ -39,6 +40,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
                         return token;
                     };
                 })
+                .AddMessagePackProtocol()
                 .Build();
 
             this._connection.On<string>("Send", this.Handle);

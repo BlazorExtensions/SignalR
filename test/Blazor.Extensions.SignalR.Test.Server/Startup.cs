@@ -33,7 +33,8 @@ namespace Blazor.Extensions.SignalR.Test.Server
             services.AddConnections();
             services
                 .AddSignalR(options => options.KeepAliveInterval = TimeSpan.FromSeconds(5))
-                .AddJsonProtocol();
+                .AddMessagePackProtocol();
+                //.AddJsonProtocol();
 
             services.AddAuthorization(options =>
             {

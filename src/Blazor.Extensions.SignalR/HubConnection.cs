@@ -1,23 +1,22 @@
-using Microsoft.AspNetCore.Blazor;
-using Microsoft.AspNetCore.Blazor.Browser.Interop;
+using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Blazor.Extensions
 {
     public class HubConnection : IDisposable
     {
-        private const string START_CONNECTION_METHOD = "Blazor.Extensions.SignalR.StartConnection";
-        private const string STOP_CONNECTION_METHOD = "Blazor.Extensions.SignalR.StopConnection";
-        private const string INVOKE_ASYNC_METHOD = "Blazor.Extensions.SignalR.InvokeAsync";
-        private const string INVOKE_WITH_RESULT_ASYNC_METHOD = "Blazor.Extensions.SignalR.InvokeWithResultAsync";
+        private const string START_CONNECTION_METHOD = "BlazorExtensions.SignalR.StartConnection";
+        private const string STOP_CONNECTION_METHOD = "BlazorExtensions.SignalR.StopConnection";
+        private const string INVOKE_ASYNC_METHOD = "BlazorExtensions.SignalR.InvokeAsync";
+        private const string INVOKE_WITH_RESULT_ASYNC_METHOD = "BlazorExtensions.SignalR.InvokeWithResultAsync";
+
         internal HttpConnectionOptions Options { get; }
         internal string InternalConnectionId { get; }
-        
+
         private Dictionary<string, Dictionary<string, (SubscriptionHandle, Func<string, Task>)>> _handlers = new Dictionary<string, Dictionary<string, (SubscriptionHandle, Func<string, Task>)>>();
-        //private Dictionary<string, Func<string, Task>> _handlers = new Dictionary<string, Func<string, Task>>();
+        
         private Func<Exception, Task> _errorHandler;
 
         public HubConnection(HttpConnectionOptions options)
@@ -30,8 +29,8 @@ namespace Blazor.Extensions
         internal Task<string> GetAccessToken() => this.Options.AccessTokenProvider != null ? this.Options.AccessTokenProvider() : null;
         internal Task OnClose(string error) => this._errorHandler != null ? this._errorHandler(new Exception(error)) : Task.CompletedTask;
 
-        public Task StartAsync() => RegisteredFunction.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);
-        public Task StopAsync() => RegisteredFunction.InvokeAsync<object>(STOP_CONNECTION_METHOD, this.InternalConnectionId);
+        public Task StartAsync() => JSRuntime.Current.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);
+        public Task StopAsync() => JSRuntime.Current.InvokeAsync<object>(STOP_CONNECTION_METHOD, this.InternalConnectionId);
 
         public IDisposable On<TResult>(string methodName, Func<TResult, Task> handler)
         {
@@ -44,9 +43,10 @@ namespace Blazor.Extensions
                 methodHandlers[subscriptionHandle.HandleId] =
                     (subscriptionHandle, (json) =>
                     {
-                        var payload = JsonUtil.Deserialize<TResult>(json);
+                        var payload = Json.Deserialize<TResult>(json);
                         return handler(payload);
-                    });
+                    }
+                );
             }
             else
             {
@@ -56,13 +56,13 @@ namespace Blazor.Extensions
                         subscriptionHandle.HandleId,
                         (subscriptionHandle, (json) =>
                         {
-                            var payload = JsonUtil.Deserialize<TResult>(json);
+                            var payload = Json.Deserialize<TResult>(json);
                             return handler(payload);
                         })
                     }
                 };
             }
-            
+
             HubConnectionManager.On(this.InternalConnectionId, subscriptionHandle);
             return subscriptionHandle;
         }
@@ -87,10 +87,10 @@ namespace Blazor.Extensions
         public void OnClose(Func<Exception, Task> handler) => this._errorHandler = handler;
 
         public Task InvokeAsync(string methodName, params object[] args) =>
-            RegisteredFunction.InvokeAsync<object>(INVOKE_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
+            JSRuntime.Current.InvokeAsync<object>(INVOKE_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
 
         public Task<TResult> InvokeAsync<TResult>(string methodName, params object[] args) =>
-            RegisteredFunction.InvokeAsync<TResult>(INVOKE_WITH_RESULT_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
+            JSRuntime.Current.InvokeAsync<TResult>(INVOKE_WITH_RESULT_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
 
         internal Task Dispatch(string methodName, string handleId, string payload)
         {

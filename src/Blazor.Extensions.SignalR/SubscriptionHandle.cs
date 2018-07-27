@@ -2,7 +2,7 @@ using System;
 
 namespace Blazor.Extensions
 {
-    internal class SubscriptionHandle : IDisposable
+    public class SubscriptionHandle : IDisposable
     {
         public string HandleId { get; private set; }
         public string MethodName { get; private set; }
