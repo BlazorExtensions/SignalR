@@ -7,6 +7,11 @@ namespace Blazor.Extensions
 {
     public class HubConnection : IDisposable
     {
+        private const string ON_METHOD = "BlazorExtensions.SignalR.On";
+        private const string ON_CLOSE_METHOD = "BlazorExtensions.SignalR.OnClose";
+        private const string OFF_METHOD = "BlazorExtensions.SignalR.Off";
+        private const string CREATE_CONNECTION_METHOD = "BlazorExtensions.SignalR.CreateConnection";
+        private const string REMOVE_CONNECTION_METHOD = "BlazorExtensions.SignalR.RemoveConnection";
         private const string START_CONNECTION_METHOD = "BlazorExtensions.SignalR.StartConnection";
         private const string STOP_CONNECTION_METHOD = "BlazorExtensions.SignalR.StopConnection";
         private const string INVOKE_ASYNC_METHOD = "BlazorExtensions.SignalR.InvokeAsync";
@@ -15,19 +20,19 @@ namespace Blazor.Extensions
         internal HttpConnectionOptions Options { get; }
         internal string InternalConnectionId { get; }
 
-        private Dictionary<string, Dictionary<string, (SubscriptionHandle, Func<string, Task>)>> _handlers = new Dictionary<string, Dictionary<string, (SubscriptionHandle, Func<string, Task>)>>();
-        
-        private Func<Exception, Task> _errorHandler;
+        private Dictionary<string, Dictionary<string, HubMethodCallback>> _callbacks = new Dictionary<string, Dictionary<string, HubMethodCallback>>();
+
+        private HubCloseCallback _closeCallback;
 
         public HubConnection(HttpConnectionOptions options)
         {
             this.Options = options;
             this.InternalConnectionId = Guid.NewGuid().ToString();
-            HubConnectionManager.AddConnection(this);
+            ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(CREATE_CONNECTION_METHOD,
+                this.InternalConnectionId,
+                new DotNetObjectRef(this.Options));
         }
 
-        internal Task<string> GetAccessToken() => this.Options.AccessTokenProvider != null ? this.Options.AccessTokenProvider() : null;
-        internal Task OnClose(string error) => this._errorHandler != null ? this._errorHandler(new Exception(error)) : Task.CompletedTask;
 
         public Task StartAsync() => JSRuntime.Current.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);
         public Task StopAsync() => JSRuntime.Current.InvokeAsync<object>(STOP_CONNECTION_METHOD, this.InternalConnectionId);
@@ -37,54 +42,58 @@ namespace Blazor.Extensions
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-            var subscriptionHandle = new SubscriptionHandle(methodName, this);
-            if (this._handlers.TryGetValue(methodName, out var methodHandlers))
+            var callbackId = Guid.NewGuid().ToString();
+
+            var callback = new HubMethodCallback(callbackId, methodName, this,
+                 (json) =>
+                 {
+                     var payload = Json.Deserialize<TResult>(json);
+                     return handler(payload);
+                 }
+            );
+
+            if (this._callbacks.TryGetValue(methodName, out var methodHandlers))
             {
-                methodHandlers[subscriptionHandle.HandleId] =
-                    (subscriptionHandle, (json) =>
-                    {
-                        var payload = Json.Deserialize<TResult>(json);
-                        return handler(payload);
-                    }
-                );
+                methodHandlers[callback.Id] = callback;
             }
             else
             {
-                this._handlers[methodName] = new Dictionary<string, (SubscriptionHandle, Func<string, Task>)>
+                this._callbacks[methodName] = new Dictionary<string, HubMethodCallback>
                 {
-                    {
-                        subscriptionHandle.HandleId,
-                        (subscriptionHandle, (json) =>
-                        {
-                            var payload = Json.Deserialize<TResult>(json);
-                            return handler(payload);
-                        })
-                    }
+                    { callback.Id, callback }
                 };
             }
 
-            HubConnectionManager.On(this.InternalConnectionId, subscriptionHandle);
-            return subscriptionHandle;
+            ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(ON_METHOD, this.InternalConnectionId, new DotNetObjectRef(callback));
+
+            //HubConnectionManager.On(this.InternalConnectionId, callback);
+            return callback;
         }
 
-        internal void RemoveHandle(string methodName, string handleId)
+        internal void RemoveHandle(string methodName, string callbackId)
         {
-            if (this._handlers.TryGetValue(methodName, out var handlers))
+            if (this._callbacks.TryGetValue(methodName, out var callbacks))
             {
-                if (handlers.TryGetValue(handleId, out var handle))
+                if (callbacks.TryGetValue(callbackId, out var callback))
                 {
-                    HubConnectionManager.Off(this.InternalConnectionId, handle.Item1);
-                    handlers.Remove(handleId);
+                    ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(OFF_METHOD, this.InternalConnectionId, new DotNetObjectRef(callback));
+                    //HubConnectionManager.Off(this.InternalConnectionId, handle.Item1);
+                    callbacks.Remove(callbackId);
 
-                    if (handlers.Count == 0)
+                    if (callbacks.Count == 0)
                     {
-                        this._handlers.Remove(methodName);
+                        this._callbacks.Remove(methodName);
                     }
                 }
             }
         }
 
-        public void OnClose(Func<Exception, Task> handler) => this._errorHandler = handler;
+        public void OnClose(Func<Exception, Task> callback) {
+            this._closeCallback = new HubCloseCallback(callback);
+            ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(ON_CLOSE_METHOD,
+                this.InternalConnectionId,
+                new DotNetObjectRef(this._closeCallback));
+        } 
 
         public Task InvokeAsync(string methodName, params object[] args) =>
             JSRuntime.Current.InvokeAsync<object>(INVOKE_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
@@ -92,18 +101,6 @@ namespace Blazor.Extensions
         public Task<TResult> InvokeAsync<TResult>(string methodName, params object[] args) =>
             JSRuntime.Current.InvokeAsync<TResult>(INVOKE_WITH_RESULT_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
 
-        internal Task Dispatch(string methodName, string handleId, string payload)
-        {
-            if (this._handlers.TryGetValue(methodName, out var handlers))
-            {
-                if (handlers.TryGetValue(handleId, out var handle))
-                {
-                    return handle.Item2(payload);
-                }
-            }
-            return Task.CompletedTask;
-        }
-
-        public void Dispose() => HubConnectionManager.RemoveConnection(this.InternalConnectionId);
+        public void Dispose() => ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(REMOVE_CONNECTION_METHOD, this.InternalConnectionId);
     }
 }

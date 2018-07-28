@@ -8,6 +8,11 @@ namespace Blazor.Extensions
 
         internal HttpConnectionOptions Options { get; set; } = new HttpConnectionOptions();
 
+        /// <summary>
+        /// Build a SignalR <see cref="HubConnection"/>
+        /// This method can only be called once.
+        /// </summary>
+        /// <returns>Return a <see cref="HubConnection"/>.</returns>
         public HubConnection Build()
         {
             // Build can only be used once

@@ -1,35 +1,40 @@
 import * as signalR from "@aspnet/signalr";
 import * as sianglRMessagePack from "@aspnet/signalr-protocol-msgpack";
+import { HttpTransportType, LogLevel } from "@aspnet/signalr";
 
 type DotNetType = {
   invokeMethod<T>(assemblyName: string, methodIdentifier: string, ...args: any[]): T,
   invokeMethodAsync<T>(assemblyName: string, methodIdentifier: string, ...args: any[]): Promise<T>
 }
 
-const BlazorExtensionsSignalrAssembly = 'Blazor.Extensions.SignalR';
+type DotNetReferenceType = {
+  invokeMethod<T>(methodIdentifier: string, ...args: any[]): T,
+  invokeMethodAsync<T>(methodIdentifier: string, ...args: any[]): Promise<T>
+}
+
 const DotNet: DotNetType = window["DotNet"];
 
 export class HubConnectionManager {
   private _hubConnections: Map<string, signalR.HubConnection> = new Map<string, signalR.HubConnection>();
   private _handles: Map<string, (payload: any) => Promise<void>> = new Map<string, (payload: any) => Promise<void>>();
 
-  public CreateConnection = (connectionId: string, httpConnectionOptions: any) => {
+  public CreateConnection = (connectionId: string, httpConnectionOptions: DotNetReferenceType) => {
     if (!connectionId) throw new Error('Invalid connectionId.');
     if (!httpConnectionOptions) throw new Error('Invalid transport options.');
-    if (!httpConnectionOptions.url) throw new Error('Invalid hub url.');
+    let url = httpConnectionOptions.invokeMethod<string>('get_Url');
+    if (!url) throw new Error('Invalid hub url.');
 
     let options: any = {
-      logger: httpConnectionOptions.logLevel,
-      transport: httpConnectionOptions.transport,
-      logMessageContent: httpConnectionOptions.logMessageContent,
-      skipNegotiation: httpConnectionOptions.skipNegotiation
+      logger: httpConnectionOptions.invokeMethod<LogLevel>('get_LogLevel'),
+      transport: httpConnectionOptions.invokeMethod<HttpTransportType>('get_Transport'),
+      logMessageContent: httpConnectionOptions.invokeMethod<boolean>('get_LogMessageContent'),
+      skipNegotiation: httpConnectionOptions.invokeMethod<boolean>('get_SkipNegotiation')
     };
 
-    if (httpConnectionOptions.hasAccessTokenFactory) {
+    if (httpConnectionOptions.invokeMethod<true>('HasAccessTokenFactory')) {
       options.accessTokenFactory = () => {
         return new Promise<string>(async (resolve, reject) => {
-          const token = await DotNet.invokeMethodAsync<string>(BlazorExtensionsSignalrAssembly, 'GetAccessToken', connectionId);
-
+          const token = await httpConnectionOptions.invokeMethodAsync<string>('GetAccessToken');
           if (token) {
             resolve(token);
           } else {
@@ -42,9 +47,9 @@ export class HubConnectionManager {
     if (this._hubConnections[connectionId]) return;
 
     let connectionBuilder = new signalR.HubConnectionBuilder()
-      .withUrl(httpConnectionOptions.url, options);
+      .withUrl(url, options);
 
-    if (httpConnectionOptions.addMessagePack) {
+    if (httpConnectionOptions.invokeMethod<true>('get_EnableMessagePack')) {
       connectionBuilder
         .withHubProtocol(new sianglRMessagePack.MessagePackHubProtocol());
     }
@@ -58,11 +63,7 @@ export class HubConnectionManager {
 
   public StartConnection = (connectionId: string): Promise<void> => {
     const connection = this.GetConnection(connectionId);
-
-    connection.onclose(async err => {
-      await DotNet.invokeMethodAsync(BlazorExtensionsSignalrAssembly, 'OnClose', connectionId, JSON.stringify(err));
-    });
-
+    
     return connection.start();
   }
 
@@ -90,14 +91,14 @@ export class HubConnectionManager {
     return connection;
   }
 
-  private On = (connectionId: string, methodName: string, handleId: string) => {
+  public On = (connectionId: string, callback: DotNetReferenceType) => {
     const connection = this.GetConnection(connectionId);
-    const handle = (payload) => this.OnHandler(connectionId, methodName, handleId, payload);
-    this._handles.set(handleId, handle);
-    connection.on(methodName, handle);
+    const handle = (payload) => callback.invokeMethodAsync<void>('On', JSON.stringify(payload));
+    this._handles.set(callback.invokeMethod<string>('get_Id'), handle);
+    connection.on(callback.invokeMethod<string>('get_MethodName'), handle);
   }
 
-  private Off = (connectionId: string, methodName: string, handleId: string) => {
+  public Off = (connectionId: string, methodName: string, handleId: string) => {
     const connection = this.GetConnection(connectionId);
     const handle = this._handles.get(handleId);
     if (handle) {
@@ -106,38 +107,10 @@ export class HubConnectionManager {
     }
   }
 
-  private OnHandler = async (connectionId: string, methodName: string, handleId: string, payload: any) => {
-    await DotNet.invokeMethodAsync(BlazorExtensionsSignalrAssembly, 'Dispatch', connectionId, methodName, handleId, JSON.stringify(payload));
-  }
-
-  public static initialize() {
-    //const Blazor: BlazorType = window["Blazor"];
-    //window["BlazorExtensions"].HubConnectionManager = new HubConnectionManager();
-
-    //Blazor.registerFunction('Blazor.Extensions.SignalR.InvokeAsync', (connectionId: string, methodName: string, args: any) => {
-    //  //TODO remove this parse after Blazor fixed the async args json parsing code
-    //  const parsedConnectionId = JSON.parse(connectionId);
-    //  const parsedMethodName = JSON.parse(methodName);
-    //  const parsedArgs = JSON.parse(args);
-
-    //  return window["BlazorExtensions"].HubConnectionManager.invokeAsync(parsedConnectionId, parsedMethodName, ...parsedArgs);
-    //});
-
-    //Blazor.registerFunction('Blazor.Extensions.SignalR.InvokeWithResultAsync', (connectionId: string, methodName: string, args: any) => {
-    //  //TODO remove this parse after Blazor fixed the async args json parsing code
-    //  const parsedConnectionId = JSON.parse(connectionId);
-    //  const parsedMethodName = JSON.parse(methodName);
-    //  const parsedArgs = JSON.parse(args);
-
-    //  return window["BlazorExtensions"].HubConnectionManager.invokeWithResultAsync(parsedConnectionId, parsedMethodName, ...parsedArgs);
-    //});
-
-    //Blazor.registerFunction('Blazor.Extensions.SignalR.On', (connectionId: string, methodName: string, handleId: string) => {
-    //  return window["BlazorExtensions"].HubConnectionManager.on(connectionId, methodName, handleId);
-    //});
-
-    //Blazor.registerFunction('Blazor.Extensions.SignalR.Off', (connectionId: string, methodName: string, handleId: string) => {
-    //  return window["BlazorExtensions"].HubConnectionManager.off(connectionId, methodName, handleId);
-    //});
+  public OnClose = (connectionId: string, onErrorCallback: DotNetReferenceType) => {
+    const connection = this.GetConnection(connectionId);
+    connection.onclose(async err => {
+      onErrorCallback.invokeMethodAsync<void>('OnClose', JSON.stringify(err));
+    });
   }
 }
