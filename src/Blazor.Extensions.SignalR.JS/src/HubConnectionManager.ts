@@ -12,8 +12,6 @@ type DotNetReferenceType = {
   invokeMethodAsync<T>(methodIdentifier: string, ...args: any[]): Promise<T>
 }
 
-const DotNet: DotNetType = window["DotNet"];
-
 export class HubConnectionManager {
   private _hubConnections: Map<string, signalR.HubConnection> = new Map<string, signalR.HubConnection>();
   private _handles: Map<string, (payload: any) => Promise<void>> = new Map<string, (payload: any) => Promise<void>>();
@@ -21,7 +19,9 @@ export class HubConnectionManager {
   public CreateConnection = (connectionId: string, httpConnectionOptions: DotNetReferenceType) => {
     if (!connectionId) throw new Error('Invalid connectionId.');
     if (!httpConnectionOptions) throw new Error('Invalid transport options.');
-    let url = httpConnectionOptions.invokeMethod<string>('get_Url');
+
+    const url = httpConnectionOptions.invokeMethod<string>('get_Url');
+
     if (!url) throw new Error('Invalid hub url.');
 
     let options: any = {
@@ -75,17 +75,21 @@ export class HubConnectionManager {
 
   public InvokeAsync = (connectionId: string, methodName: string, args: any[]): Promise<void> => {
     const connection = this.GetConnection(connectionId);
+
     return connection.invoke(methodName, ...args);
   }
 
   public InvokeWithResultAsync = (connectionId: string, methodName: string, args: any[]): Promise<any> => {
     const connection = this.GetConnection(connectionId);
+
     return connection.invoke(methodName, ...args);
   }
 
   private GetConnection = (connectionId: string) => {
     if (!connectionId) throw new Error('Invalid connectionId.');
+
     const connection = this._hubConnections.get(connectionId);
+
     if (!connection) throw new Error('Invalid connection.');
 
     return connection;
@@ -94,21 +98,26 @@ export class HubConnectionManager {
   public On = (connectionId: string, callback: DotNetReferenceType) => {
     const connection = this.GetConnection(connectionId);
     const handle = (payload) => callback.invokeMethodAsync<void>('On', JSON.stringify(payload));
+
     this._handles.set(callback.invokeMethod<string>('get_Id'), handle);
+
     connection.on(callback.invokeMethod<string>('get_MethodName'), handle);
   }
 
   public Off = (connectionId: string, methodName: string, handleId: string) => {
     const connection = this.GetConnection(connectionId);
     const handle = this._handles.get(handleId);
+
     if (handle) {
       connection.off(methodName, handle);
+
       this._handles.delete(handleId);
     }
   }
 
   public OnClose = (connectionId: string, onErrorCallback: DotNetReferenceType) => {
     const connection = this.GetConnection(connectionId);
+
     connection.onclose(async err => {
       onErrorCallback.invokeMethodAsync<void>('OnClose', JSON.stringify(err));
     });

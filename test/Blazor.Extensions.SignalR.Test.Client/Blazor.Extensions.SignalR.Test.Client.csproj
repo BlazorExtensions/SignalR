@@ -1,16 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <OutputType>Exe</OutputType>
-    <LangVersion>7.3</LangVersion>
-
-    <!-- Temporary workaround for a VS build issue -->
-    <BlazorRebuildOnFileChange>false</BlazorRebuildOnFileChange>
-  </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Blazor.Extensions.Logging" Version="0.1.7" />
+    <PackageReference Include="Blazor.Extensions.Logging" Version="0.1.8" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Browser" Version="0.5.1" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="0.5.1" />
   </ItemGroup>
