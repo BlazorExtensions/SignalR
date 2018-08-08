@@ -27,6 +27,17 @@ namespace Blazor.Extensions.SignalR.Test.Server.Hubs
             await this.Clients.Others.SendAsync("Send", $"{this.Context.ConnectionId} left");
         }
 
+        public Task DoMultipleArgs()
+        {
+            return this.Clients.All.SendAsync("DemoMultiArgs", "one", 2, "three", 4);
+        }
+
+        public Task DoMultipleArgsComplex()
+        {
+            return this.Clients.All.SendAsync("DemoMultiArgs2", new DemoData { Id = 1, Data = "Demo Data" },
+                Enumerable.Range(1, 10).Select(x => new DemoData { Id = x, Data = $"Demo Data #{x}" }).ToList());
+        }
+
         public Task Send(string message)
         {
             return this.Clients.All.SendAsync("Send", $"{this.Context.ConnectionId}: {message}");

@@ -7,9 +7,9 @@ namespace Blazor.Extensions
     public class HubMethodCallback : IDisposable
     {
         private readonly HubConnection _connection;
-        private readonly Func<string, Task> _callback;
+        private readonly Func<string[], Task> _callback;
 
-        public HubMethodCallback(string id, string methodName, HubConnection connection, Func<string, Task> callback)
+        public HubMethodCallback(string id, string methodName, HubConnection connection, Func<string[], Task> callback)
         {
             this.MethodName = methodName;
             this.Id = id;
@@ -21,7 +21,7 @@ namespace Blazor.Extensions
         public string Id { [JSInvokable]get; private set; }
         
         [JSInvokable]
-        public Task On(string payload) => this._callback(payload);
+        public Task On(string[] payloads) => this._callback(payloads);
 
         public void Dispose()
         {
