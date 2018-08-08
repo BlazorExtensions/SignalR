@@ -76,7 +76,7 @@ namespace Blazor.Extensions
             {
                 if (callbacks.TryGetValue(callbackId, out var callback))
                 {
-                    ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(OFF_METHOD, this.InternalConnectionId, new DotNetObjectRef(callback));
+                    ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(OFF_METHOD, this.InternalConnectionId, methodName, callbackId);
                     //HubConnectionManager.Off(this.InternalConnectionId, handle.Item1);
                     callbacks.Remove(callbackId);
 
