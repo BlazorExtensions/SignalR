@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Blazor.Extensions.SignalR.Test.Client.Pages
@@ -22,6 +23,8 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
 
         private IDisposable _objectHandle;
         private IDisposable _listHandle;
+        private IDisposable _multiArgsHandle;
+        private IDisposable _multiArgsComplexHandle;
         private HubConnection _connection;
 
         protected override async Task OnInitAsync()
@@ -70,6 +73,22 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
             return this.Handle(data);
         }
 
+        public Task DemoMultipleArgs(string arg1, int arg2, string arg3, int arg4)
+        {
+            this._logger.LogInformation("Got Multiple Args!");
+            this._multiArgsHandle.Dispose();
+
+            return this.HandleArgs(arg1, arg2, arg3, arg4);
+        }
+
+        public Task DemoMultipleArgsComplex(object arg1, object arg2)
+        {
+            this._logger.LogInformation("Got Multiple Args Complex!");
+            this._multiArgsComplexHandle.Dispose();
+
+            return this.HandleArgs(arg1, arg2);
+        }
+
         private async Task<string> GetJwtToken(string userId)
         {
             var httpResponse = await this._http.GetAsync($"/generatetoken?user={userId}");
@@ -81,6 +100,16 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         {
             this._logger.LogInformation(msg);
             this._messages.Add(msg.ToString());
+            this.StateHasChanged();
+            return Task.CompletedTask;
+        }
+
+        private Task HandleArgs(params object[] args)
+        {
+            string msg = string.Join(", ", args);
+
+            this._logger.LogInformation(msg);
+            this._messages.Add(msg);
             this.StateHasChanged();
             return Task.CompletedTask;
         }
@@ -123,6 +152,14 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         internal async Task LeaveGroup()
         {
             await this._connection.InvokeAsync("LeaveGroup", this._groupName);
+        }
+
+        internal async Task DoMultipleArgs()
+        {
+            this._multiArgsHandle = this._connection.On<string, int, string, int>("DemoMultiArgs", this.DemoMultipleArgs);
+            this._multiArgsComplexHandle = this._connection.On<DemoData, DemoData[]>("DemoMultiArgs2", this.DemoMultipleArgsComplex);
+            await this._connection.InvokeAsync("DoMultipleArgs");
+            await this._connection.InvokeAsync("DoMultipleArgsComplex");
         }
 
         internal async Task TellHubToDoStuff()

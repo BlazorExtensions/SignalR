@@ -63,7 +63,7 @@ export class HubConnectionManager {
 
   public StartConnection = (connectionId: string): Promise<void> => {
     const connection = this.GetConnection(connectionId);
-    
+
     return connection.start();
   }
 
@@ -97,7 +97,7 @@ export class HubConnectionManager {
 
   public On = (connectionId: string, callback: DotNetReferenceType) => {
     const connection = this.GetConnection(connectionId);
-    const handle = (payload) => callback.invokeMethodAsync<void>('On', JSON.stringify(payload));
+    const handle = (...payloads) => callback.invokeMethodAsync<void>('On', payloads.map(payload => JSON.stringify(payload)));
 
     this._handles.set(callback.invokeMethod<string>('get_Id'), handle);
 
