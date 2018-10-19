@@ -28,7 +28,7 @@ namespace Blazor.Extensions
         {
             this.Options = options;
             this.InternalConnectionId = Guid.NewGuid().ToString();
-            ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(CREATE_CONNECTION_METHOD,
+            JSRuntime.Current.InvokeSync<object>(CREATE_CONNECTION_METHOD,
                 this.InternalConnectionId,
                 new DotNetObjectRef(this.Options));
         }
@@ -163,7 +163,7 @@ namespace Blazor.Extensions
                 };
             }
 
-            ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(ON_METHOD, this.InternalConnectionId, new DotNetObjectRef(callback));
+            JSRuntime.Current.InvokeSync<object>(ON_METHOD, this.InternalConnectionId, new DotNetObjectRef(callback));
         }
 
         internal void RemoveHandle(string methodName, string callbackId)
@@ -172,7 +172,7 @@ namespace Blazor.Extensions
             {
                 if (callbacks.TryGetValue(callbackId, out var callback))
                 {
-                    ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(OFF_METHOD, this.InternalConnectionId, methodName, callbackId);
+                    JSRuntime.Current.InvokeSync<object>(OFF_METHOD, this.InternalConnectionId, methodName, callbackId);
                     //HubConnectionManager.Off(this.InternalConnectionId, handle.Item1);
                     callbacks.Remove(callbackId);
 
@@ -187,7 +187,7 @@ namespace Blazor.Extensions
         public void OnClose(Func<Exception, Task> callback)
         {
             this._closeCallback = new HubCloseCallback(callback);
-            ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(ON_CLOSE_METHOD,
+            JSRuntime.Current.InvokeSync<object>(ON_CLOSE_METHOD,
                 this.InternalConnectionId,
                 new DotNetObjectRef(this._closeCallback));
         }
@@ -198,6 +198,6 @@ namespace Blazor.Extensions
         public Task<TResult> InvokeAsync<TResult>(string methodName, params object[] args) =>
             JSRuntime.Current.InvokeAsync<TResult>(INVOKE_WITH_RESULT_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
 
-        public void Dispose() => ((IJSInProcessRuntime)JSRuntime.Current).Invoke<object>(REMOVE_CONNECTION_METHOD, this.InternalConnectionId);
+        public void Dispose() => JSRuntime.Current.InvokeSync<object>(REMOVE_CONNECTION_METHOD, this.InternalConnectionId);
     }
 }
