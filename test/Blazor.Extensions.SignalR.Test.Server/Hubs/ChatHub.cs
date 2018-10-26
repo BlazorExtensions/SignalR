@@ -27,6 +27,15 @@ namespace Blazor.Extensions.SignalR.Test.Server.Hubs
             await this.Clients.Others.SendAsync("Send", $"{this.Context.ConnectionId} left");
         }
 
+        public async Task<byte[]> DoByteArrayArg()
+        {
+            var array = new byte[] { 1, 2, 3 };
+
+            await this.Clients.All.SendAsync("DemoByteArrayArg", array);
+
+            return array;
+        }
+
         public Task DoMultipleArgs()
         {
             return this.Clients.All.SendAsync("DemoMultiArgs", "one", 2, "three", 4);

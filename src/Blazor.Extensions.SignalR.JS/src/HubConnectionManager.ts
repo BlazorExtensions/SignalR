@@ -79,10 +79,12 @@ export class HubConnectionManager {
     return connection.invoke(methodName, ...args);
   }
 
-  public InvokeWithResultAsync = (connectionId: string, methodName: string, args: any[]): Promise<any> => {
+  public InvokeWithResultAsync = async (connectionId: string, methodName: string, args: any[]): Promise<any> => {
     const connection = this.GetConnection(connectionId);
 
-    return connection.invoke(methodName, ...args);
+    var result = await connection.invoke(methodName, ...args);
+
+    return this.ReplaceTypedArray(result);
   }
 
   private GetConnection = (connectionId: string) => {
@@ -95,9 +97,27 @@ export class HubConnectionManager {
     return connection;
   }
 
+  private ReplaceTypedArray = (obj: any): any => {
+    if (obj instanceof Int8Array ||
+        obj instanceof Uint8Array ||
+        obj instanceof Uint8ClampedArray ||
+        obj instanceof Int16Array ||
+        obj instanceof Uint16Array ||
+        obj instanceof Int32Array ||
+        obj instanceof Uint32Array ||
+        obj instanceof Float32Array ||
+        obj instanceof Float64Array)
+    {
+      obj = Array.prototype.slice.call(obj);
+    }
+
+    return obj;
+  }
+
   public On = (connectionId: string, callback: DotNetReferenceType) => {
     const connection = this.GetConnection(connectionId);
-    const handle = (...payloads) => callback.invokeMethodAsync<void>('On', payloads.map(payload => JSON.stringify(payload)));
+    const handle = (...payloads) => callback.invokeMethodAsync<void>(
+      'On', payloads.map(payload => JSON.stringify(this.ReplaceTypedArray(payload))));
 
     this._handles.set(callback.invokeMethod<string>('get_Id'), handle);
 
