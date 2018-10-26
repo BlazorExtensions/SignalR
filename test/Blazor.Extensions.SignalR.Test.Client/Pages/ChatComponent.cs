@@ -25,6 +25,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         private IDisposable _listHandle;
         private IDisposable _multiArgsHandle;
         private IDisposable _multiArgsComplexHandle;
+        private IDisposable _byteArrayHandle;
         private HubConnection _connection;
 
         protected override async Task OnInitAsync()
@@ -87,6 +88,14 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
             this._multiArgsComplexHandle.Dispose();
 
             return this.HandleArgs(arg1, arg2);
+        }
+
+        public Task DemoByteArrayArg(byte[] array)
+        {
+            this._logger.LogInformation("Got byte array!");
+            this._byteArrayHandle.Dispose();
+
+            return this.HandleArgs(BitConverter.ToString(array));
         }
 
         private async Task<string> GetJwtToken(string userId)
@@ -160,6 +169,14 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
             this._multiArgsComplexHandle = this._connection.On<DemoData, DemoData[]>("DemoMultiArgs2", this.DemoMultipleArgsComplex);
             await this._connection.InvokeAsync("DoMultipleArgs");
             await this._connection.InvokeAsync("DoMultipleArgsComplex");
+        }
+
+        internal async Task DoByteArrayArg()
+        {
+            this._byteArrayHandle = this._connection.On<byte[]>("DemoByteArrayArg", this.DemoByteArrayArg);
+            var array = await this._connection.InvokeAsync<byte[]>("DoByteArrayArg");
+
+            this._logger.LogInformation("Got byte returned from hub method array: {0}", BitConverter.ToString(array));
         }
 
         internal async Task TellHubToDoStuff()
