@@ -1,5 +1,5 @@
 using Blazor.Extensions.Logging;
-using Microsoft.AspNetCore.Blazor.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,10 +9,11 @@ using System.Threading.Tasks;
 
 namespace Blazor.Extensions.SignalR.Test.Client.Pages
 {
-    public class ChatComponent : BlazorComponent
+
+    public class ChatComponent : ComponentBase
     {
-        [Inject] private HttpClient _http { get; set; }
-        [Inject] private ILogger<ChatComponent> _logger { get; set; }
+        [Microsoft.AspNetCore.Blazor.Components.Inject] private HttpClient _http { get; set; }
+        [Microsoft.AspNetCore.Blazor.Components.Inject] private ILogger<ChatComponent> _logger { get; set; }
         internal string _toEverybody { get; set; }
         internal string _toConnection { get; set; }
         internal string _connectionId { get; set; }

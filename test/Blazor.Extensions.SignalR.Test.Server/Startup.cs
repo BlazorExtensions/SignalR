@@ -3,13 +3,12 @@
 
 using Blazor.Extensions.SignalR.Test.Server.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Blazor.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Components.Server;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -30,6 +29,9 @@ namespace Blazor.Extensions.SignalR.Test.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.AddRazorComponents<Client.Startup>();
+
             services.AddConnections();
             services
                 .AddSignalR(options => options.KeepAliveInterval = TimeSpan.FromSeconds(5))
@@ -81,7 +83,7 @@ namespace Blazor.Extensions.SignalR.Test.Server
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddMvc().AddJsonOptions(options =>
+            services.AddMvc().AddNewtonsoftJson(options =>
             {
                 options.SerializerSettings.ContractResolver = new DefaultContractResolver();
             });
@@ -95,14 +97,7 @@ namespace Blazor.Extensions.SignalR.Test.Server
                        .AllowCredentials();
             }));
 
-            services.AddResponseCompression(options =>
-            {
-                options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
-                {
-                    MediaTypeNames.Application.Octet,
-                    WasmMediaTypeNames.Application.Wasm,
-                });
-            });
+            services.AddResponseCompression();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -120,6 +115,7 @@ namespace Blazor.Extensions.SignalR.Test.Server
                 app.UseHsts();
             }
 
+            app.UseStaticFiles();
             app.UseHttpsRedirection();
             app.UseCookiePolicy();
             app.UseCors("CorsPolicy");
@@ -133,7 +129,7 @@ namespace Blazor.Extensions.SignalR.Test.Server
                 routes.MapRoute(name: "default", template: "{controller}/{action}/{id?}");
             });
 
-            app.UseBlazor<Client.Program>();
+            app.UseRazorComponents<Client.Startup>();
         }
     }
 }
