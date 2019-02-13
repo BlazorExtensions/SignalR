@@ -1,5 +1,5 @@
 import * as signalR from "@aspnet/signalr";
-import * as sianglRMessagePack from "@aspnet/signalr-protocol-msgpack";
+import * as signalRMessagePack from "@aspnet/signalr-protocol-msgpack";
 import { HttpTransportType, LogLevel } from "@aspnet/signalr";
 
 type DotNetType = {
@@ -51,7 +51,7 @@ export class HubConnectionManager {
 
     if (httpConnectionOptions.invokeMethod<true>('get_EnableMessagePack')) {
       connectionBuilder
-        .withHubProtocol(new sianglRMessagePack.MessagePackHubProtocol());
+        .withHubProtocol(new signalRMessagePack.MessagePackHubProtocol());
     }
 
     this._hubConnections.set(connectionId, connectionBuilder.build());
