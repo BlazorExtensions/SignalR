@@ -1,18 +1,18 @@
-using Blazor.Extensions.Logging;
-using Microsoft.AspNetCore.Blazor.Components;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace Blazor.Extensions.SignalR.Test.Client.Pages
 {
-    public class ChatComponent : BlazorComponent
+    public class ChatComponent : ComponentBase
     {
         [Inject] private HttpClient _http { get; set; }
-        [Inject] private ILogger<ChatComponent> _logger { get; set; }
+        [Inject] private IJSRuntime runtime { get; set; }
+//        [Inject] private ILogger<ChatComponent> _logger { get; set; }
         internal string _toEverybody { get; set; }
         internal string _toConnection { get; set; }
         internal string _connectionId { get; set; }
@@ -40,17 +40,17 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
                     opt.AccessTokenProvider = async () =>
                     {
                         var token = await this.GetJwtToken("DemoUser");
-                        this._logger.LogInformation($"Access Token: {token}");
+                        Console.WriteLine($"Access Token: {token}");
                         return token;
                     };
                 })
                 .AddMessagePackProtocol()
-                .Build();
+                .Build(runtime);
 
             this._connection.On<string>("Send", this.Handle);
             this._connection.OnClose(exc =>
             {
-                this._logger.LogError(exc, "Connection was closed!");
+                Console.WriteLine("Connection was closed! " + exc.ToString());
                 return Task.CompletedTask;
             });
             await this._connection.StartAsync();
@@ -58,8 +58,8 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
 
         public Task DemoMethodObject(object data)
         {
-            this._logger.LogInformation("Got object!");
-            this._logger.LogInformation(data?.GetType().FullName ?? "<NULL>");
+            Console.WriteLine("Got object!");
+            Console.WriteLine(data?.GetType().FullName ?? "<NULL>");
             this._objectHandle.Dispose();
             if (data == null) return Task.CompletedTask;
             return this.Handle(data);
@@ -67,8 +67,8 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
 
         public Task DemoMethodList(object data)
         {
-            this._logger.LogInformation("Got List!");
-            this._logger.LogInformation(data?.GetType().FullName ?? "<NULL>");
+            Console.WriteLine("Got List!");
+            Console.WriteLine(data?.GetType().FullName ?? "<NULL>");
             this._listHandle.Dispose();
             if (data == null) return Task.CompletedTask;
             return this.Handle(data);
@@ -76,7 +76,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
 
         public Task DemoMultipleArgs(string arg1, int arg2, string arg3, int arg4)
         {
-            this._logger.LogInformation("Got Multiple Args!");
+            Console.WriteLine("Got Multiple Args!");
             this._multiArgsHandle.Dispose();
 
             return this.HandleArgs(arg1, arg2, arg3, arg4);
@@ -84,7 +84,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
 
         public Task DemoMultipleArgsComplex(object arg1, object arg2)
         {
-            this._logger.LogInformation("Got Multiple Args Complex!");
+            Console.WriteLine("Got Multiple Args Complex!");
             this._multiArgsComplexHandle.Dispose();
 
             return this.HandleArgs(arg1, arg2);
@@ -92,7 +92,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
 
         public Task DemoByteArrayArg(byte[] array)
         {
-            this._logger.LogInformation("Got byte array!");
+            Console.WriteLine("Got byte array!");
             this._byteArrayHandle.Dispose();
 
             return this.HandleArgs(BitConverter.ToString(array));
@@ -107,7 +107,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
 
         private Task Handle(object msg)
         {
-            this._logger.LogInformation(msg);
+            Console.WriteLine(msg);
             this._messages.Add(msg.ToString());
             this.StateHasChanged();
             return Task.CompletedTask;
@@ -117,7 +117,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         {
             string msg = string.Join(", ", args);
 
-            this._logger.LogInformation(msg);
+            Console.WriteLine(msg);
             this._messages.Add(msg);
             this.StateHasChanged();
             return Task.CompletedTask;
@@ -176,7 +176,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
             this._byteArrayHandle = this._connection.On<byte[]>("DemoByteArrayArg", this.DemoByteArrayArg);
             var array = await this._connection.InvokeAsync<byte[]>("DoByteArrayArg");
 
-            this._logger.LogInformation("Got byte returned from hub method array: {0}", BitConverter.ToString(array));
+            Console.WriteLine("Got byte returned from hub method array: {0}", BitConverter.ToString(array));
         }
 
         internal async Task TellHubToDoStuff()

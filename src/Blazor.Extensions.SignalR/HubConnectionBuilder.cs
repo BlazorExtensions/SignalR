@@ -1,4 +1,5 @@
 using System;
+using Microsoft.JSInterop;
 
 namespace Blazor.Extensions
 {
@@ -13,7 +14,7 @@ namespace Blazor.Extensions
         /// This method can only be called once.
         /// </summary>
         /// <returns>Return a <see cref="HubConnection"/>.</returns>
-        public HubConnection Build()
+        public HubConnection Build(IJSRuntime runtime)
         {
             // Build can only be used once
             if (this._hubConnectionBuilt)
@@ -23,7 +24,7 @@ namespace Blazor.Extensions
 
             this._hubConnectionBuilt = true;
 
-            return new HubConnection(this.Options);
+            return new HubConnection(runtime, this.Options);
         }
     }
 

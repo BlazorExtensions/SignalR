@@ -1,3 +1,5 @@
+@using Microsoft.AspNetCore.Components.Routing
+
 <div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="/">Blazor.Extensions.SignalR.Test</a>
     <button class="navbar-toggler" onclick=@ToggleNavMenu>
@@ -8,7 +10,7 @@
 <div class=@(collapseNavMenu ? "collapse" : null) onclick=@ToggleNavMenu>
     <ul class="nav flex-column">
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="/" Match=NavLinkMatch.All>
+            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
                 <span class="oi oi-chat" aria-hidden="true"></span> Chat
             </NavLink>
         </li>

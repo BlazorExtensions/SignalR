@@ -23,19 +23,21 @@ namespace Blazor.Extensions
         private Dictionary<string, Dictionary<string, HubMethodCallback>> _callbacks = new Dictionary<string, Dictionary<string, HubMethodCallback>>();
 
         private HubCloseCallback _closeCallback;
+        private IJSRuntime runtime;
 
-        public HubConnection(HttpConnectionOptions options)
+        public HubConnection(IJSRuntime runtime, HttpConnectionOptions options)
         {
+            this.runtime = runtime;
             this.Options = options;
             this.InternalConnectionId = Guid.NewGuid().ToString();
-            JSRuntime.Current.InvokeSync<object>(CREATE_CONNECTION_METHOD,
+            runtime.InvokeSync<object>(CREATE_CONNECTION_METHOD,
                 this.InternalConnectionId,
                 new DotNetObjectRef(this.Options));
         }
 
 
-        public Task StartAsync() => JSRuntime.Current.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);
-        public Task StopAsync() => JSRuntime.Current.InvokeAsync<object>(STOP_CONNECTION_METHOD, this.InternalConnectionId);
+        public Task StartAsync() => runtime.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);
+        public Task StopAsync() => runtime.InvokeAsync<object>(STOP_CONNECTION_METHOD, this.InternalConnectionId);
 
         public IDisposable On<TResult1>(string methodName, Func<TResult1, Task> handler)
             => On<TResult1, object, object, object, object, object, object, object, object, object>(methodName,
@@ -163,7 +165,7 @@ namespace Blazor.Extensions
                 };
             }
 
-            JSRuntime.Current.InvokeSync<object>(ON_METHOD, this.InternalConnectionId, new DotNetObjectRef(callback));
+            runtime.InvokeSync<object>(ON_METHOD, this.InternalConnectionId, new DotNetObjectRef(callback));
         }
 
         internal void RemoveHandle(string methodName, string callbackId)
@@ -172,7 +174,7 @@ namespace Blazor.Extensions
             {
                 if (callbacks.TryGetValue(callbackId, out var callback))
                 {
-                    JSRuntime.Current.InvokeSync<object>(OFF_METHOD, this.InternalConnectionId, methodName, callbackId);
+                    runtime.InvokeSync<object>(OFF_METHOD, this.InternalConnectionId, methodName, callbackId);
                     //HubConnectionManager.Off(this.InternalConnectionId, handle.Item1);
                     callbacks.Remove(callbackId);
 
@@ -187,17 +189,17 @@ namespace Blazor.Extensions
         public void OnClose(Func<Exception, Task> callback)
         {
             this._closeCallback = new HubCloseCallback(callback);
-            JSRuntime.Current.InvokeSync<object>(ON_CLOSE_METHOD,
+            runtime.InvokeSync<object>(ON_CLOSE_METHOD,
                 this.InternalConnectionId,
                 new DotNetObjectRef(this._closeCallback));
         }
 
         public Task InvokeAsync(string methodName, params object[] args) =>
-            JSRuntime.Current.InvokeAsync<object>(INVOKE_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
+            runtime.InvokeAsync<object>(INVOKE_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
 
         public Task<TResult> InvokeAsync<TResult>(string methodName, params object[] args) =>
-            JSRuntime.Current.InvokeAsync<TResult>(INVOKE_WITH_RESULT_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
+            runtime.InvokeAsync<TResult>(INVOKE_WITH_RESULT_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
 
-        public void Dispose() => JSRuntime.Current.InvokeSync<object>(REMOVE_CONNECTION_METHOD, this.InternalConnectionId);
+        public void Dispose() => runtime.InvokeSync<object>(REMOVE_CONNECTION_METHOD, this.InternalConnectionId);
     }
 }

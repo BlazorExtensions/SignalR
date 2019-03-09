@@ -1,5 +1,4 @@
-using Blazor.Extensions.Logging;
-using Microsoft.AspNetCore.Blazor.Builder;
+using Microsoft.AspNetCore.Components.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Blazor.Extensions.SignalR.Test.Client
@@ -8,10 +7,9 @@ namespace Blazor.Extensions.SignalR.Test.Client
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(builder => builder.AddBrowserConsole());
         }
 
-        public void Configure(IBlazorApplicationBuilder app)
+        public void Configure(IComponentsApplicationBuilder app)
         {
             app.AddComponent<App>("app");
         }
