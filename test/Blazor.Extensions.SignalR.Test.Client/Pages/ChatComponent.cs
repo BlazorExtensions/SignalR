@@ -28,6 +28,11 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         private IDisposable _byteArrayHandle;
         private HubConnection _connection;
 
+        public ChatComponent()
+        {
+
+        }
+
         protected override async Task OnInitAsync()
         {
             this._connection = new HubConnectionBuilder()
@@ -100,7 +105,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
 
         private async Task<string> GetJwtToken(string userId)
         {
-            var httpResponse = await this._http.GetAsync($"/generatetoken?user={userId}");
+            var httpResponse = await this._http.GetAsync($"generatetoken?user={userId}");
             httpResponse.EnsureSuccessStatusCode();
             return await httpResponse.Content.ReadAsStringAsync();
         }
