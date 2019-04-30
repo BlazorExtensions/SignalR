@@ -11,7 +11,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
     public class ChatComponent : ComponentBase
     {
         [Inject] private HttpClient _http { get; set; }
-        [Inject] private IJSRuntime runtime { get; set; }
+        [Inject] private HubConnectionBuilder _hubConnectionBuilder { get; set; }
 //        [Inject] private ILogger<ChatComponent> _logger { get; set; }
         internal string _toEverybody { get; set; }
         internal string _toConnection { get; set; }
@@ -28,14 +28,9 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         private IDisposable _byteArrayHandle;
         private HubConnection _connection;
 
-        public ChatComponent()
-        {
-
-        }
-
         protected override async Task OnInitAsync()
         {
-            this._connection = new HubConnectionBuilder()
+            this._connection = this._hubConnectionBuilder
                 .WithUrl("/chathub",
                 opt =>
                 {
@@ -50,7 +45,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
                     };
                 })
                 .AddMessagePackProtocol()
-                .Build(runtime);
+                .Build();
 
             this._connection.On<string>("Send", this.Handle);
             this._connection.OnClose(exc =>

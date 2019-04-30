@@ -7,6 +7,7 @@ namespace Blazor.Extensions.SignalR.Test.Client
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTransient<HubConnectionBuilder>();
         }
 
         public void Configure(IComponentsApplicationBuilder app)
