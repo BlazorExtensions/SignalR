@@ -1,4 +1,5 @@
 using System;
+using Microsoft.JSInterop;
 
 namespace Blazor.Extensions
 {
@@ -6,7 +7,14 @@ namespace Blazor.Extensions
     {
         private bool _hubConnectionBuilt;
 
+        private IJSRuntime _runtime;
+
         internal HttpConnectionOptions Options { get; set; } = new HttpConnectionOptions();
+
+        public HubConnectionBuilder(IJSRuntime runtime)
+        {
+            this._runtime = runtime;
+        }
 
         /// <summary>
         /// Build a SignalR <see cref="HubConnection"/>
@@ -23,7 +31,7 @@ namespace Blazor.Extensions
 
             this._hubConnectionBuilt = true;
 
-            return new HubConnection(this.Options);
+            return new HubConnection(this._runtime, this.Options);
         }
     }
 

@@ -3,7 +3,6 @@
 
 using Blazor.Extensions.SignalR.Test.Server.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Blazor.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -18,6 +17,7 @@ using System.Linq;
 using System.Net.Mime;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 
 namespace Blazor.Extensions.SignalR.Test.Server
 {
@@ -81,38 +81,24 @@ namespace Blazor.Extensions.SignalR.Test.Server
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddMvc().AddJsonOptions(options =>
-            {
-                options.SerializerSettings.ContractResolver = new DefaultContractResolver();
-            });
+            services.AddMvc();
 
-            services.AddCors(options => options.AddPolicy("CorsPolicy",
-            builder =>
+            services.AddResponseCompression(opts =>
             {
-                builder.AllowAnyMethod()
-                       .AllowAnyHeader()
-                       .AllowAnyOrigin()
-                       .AllowCredentials();
-            }));
-
-            services.AddResponseCompression(options =>
-            {
-                options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
-                {
-                    MediaTypeNames.Application.Octet,
-                    WasmMediaTypeNames.Application.Wasm,
-                });
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                    new[] { "application/octet-stream" });
             });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseResponseCompression();
 
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseBlazorDebugging();
             }
             else
             {
@@ -128,9 +114,11 @@ namespace Blazor.Extensions.SignalR.Test.Server
                 routes.MapHub<ChatHub>("/chathub");
             });
 
-            app.UseMvc(routes =>
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(name: "default", template: "{controller}/{action}/{id?}");
+                endpoints.MapDefaultControllerRoute();
             });
 
             app.UseBlazor<Client.Program>();
