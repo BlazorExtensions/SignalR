@@ -7,14 +7,21 @@ namespace Blazor.Extensions
     {
         private bool _hubConnectionBuilt;
 
+        private IJSRuntime _runtime;
+
         internal HttpConnectionOptions Options { get; set; } = new HttpConnectionOptions();
+
+        public HubConnectionBuilder(IJSRuntime runtime)
+        {
+            this._runtime = runtime;
+        }
 
         /// <summary>
         /// Build a SignalR <see cref="HubConnection"/>
         /// This method can only be called once.
         /// </summary>
         /// <returns>Return a <see cref="HubConnection"/>.</returns>
-        public HubConnection Build(IJSRuntime runtime)
+        public HubConnection Build()
         {
             // Build can only be used once
             if (this._hubConnectionBuilt)
@@ -24,7 +31,7 @@ namespace Blazor.Extensions
 
             this._hubConnectionBuilt = true;
 
-            return new HubConnection(runtime, this.Options);
+            return new HubConnection(this._runtime, this.Options);
         }
     }
 
