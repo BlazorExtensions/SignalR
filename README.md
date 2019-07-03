@@ -25,8 +25,19 @@ This package implements all public features of SignalR Typescript client.
 
 The following snippet shows how to setup the client to send and receive messages using SignalR.
 
+The HubConnectionBuilder needs to get injected, which must be registered:
 ```c#
-var connection = new HubConnectionBuilder()
+// in Startup.cs, ConfigureServices()
+   services.AddTransient<HubConnectionBuilder>();
+```
+```c#
+// in Component class
+[Inject]
+private HubConnectionBuilder _hubConnectionBuilder { get; set; }
+```
+```c#
+// in Component Initialization code
+var connection = _hubConnectionBuilder // the injected one from above.
         .WithUrl("/myHub", // The hub URL. If the Hub is hosted on the server where the blazor is hosted, you can just use the relative path.
         opt =>
         {

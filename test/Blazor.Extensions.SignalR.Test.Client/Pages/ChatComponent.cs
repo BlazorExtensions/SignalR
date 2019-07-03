@@ -13,16 +13,16 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         [Inject] private HttpClient _http { get; set; }
         [Inject] private HubConnectionBuilder _hubConnectionBuilder { get; set; }
 //        [Inject] private ILogger<ChatComponent> _logger { get; set; }
-        internal string _toEverybody { get; set; }
-        internal string _toConnection { get; set; }
-        internal string _connectionId { get; set; }
-        internal string _toMe { get; set; }
-        internal string _toGroup { get; set; }
-        internal string _groupName { get; set; }
-        internal List<string> _messages { get; set; } = new List<string>();
+        internal string ToEverybody { get; set; }
+        internal string ToConnection { get; set; }
+        internal string ConnectionId { get; set; }
+        internal string ToMe { get; set; }
+        internal string ToGroup { get; set; }
+        internal string GroupName { get; set; }
+        internal List<string> Messages { get; set; } = new List<string>();
 
-        private IDisposable _objectHandle;
-        private IDisposable _listHandle;
+        private IDisposable objectHandle;
+        private IDisposable listHandle;
         private IDisposable _multiArgsHandle;
         private IDisposable _multiArgsComplexHandle;
         private IDisposable _byteArrayHandle;
@@ -44,7 +44,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
                         return token;
                     };
                 })
-                .AddMessagePackProtocol()
+                //.AddMessagePackProtocol()
                 .Build();
 
             this._connection.On<string>("Send", this.Handle);
@@ -60,7 +60,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         {
             Console.WriteLine("Got object!");
             Console.WriteLine(data?.GetType().FullName ?? "<NULL>");
-            this._objectHandle.Dispose();
+            this.objectHandle.Dispose();
             if (data == null) return Task.CompletedTask;
             return this.Handle(data);
         }
@@ -69,7 +69,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         {
             Console.WriteLine("Got List!");
             Console.WriteLine(data?.GetType().FullName ?? "<NULL>");
-            this._listHandle.Dispose();
+            this.listHandle.Dispose();
             if (data == null) return Task.CompletedTask;
             return this.Handle(data);
         }
@@ -108,7 +108,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         private Task Handle(object msg)
         {
             Console.WriteLine(msg);
-            this._messages.Add(msg.ToString());
+            this.Messages.Add(msg.ToString());
             this.StateHasChanged();
             return Task.CompletedTask;
         }
@@ -118,49 +118,49 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
             string msg = string.Join(", ", args);
 
             Console.WriteLine(msg);
-            this._messages.Add(msg);
+            this.Messages.Add(msg);
             this.StateHasChanged();
             return Task.CompletedTask;
         }
 
         internal async Task Broadcast()
         {
-            await this._connection.InvokeAsync("Send", this._toEverybody);
+            await this._connection.InvokeAsync("Send", this.ToEverybody);
         }
 
         internal async Task SendToOthers()
         {
-            await this._connection.InvokeAsync("SendToOthers", this._toEverybody);
+            await this._connection.InvokeAsync("SendToOthers", this.ToEverybody);
         }
 
         internal async Task SendToConnection()
         {
-            await this._connection.InvokeAsync("SendToConnection", this._connectionId, this._toConnection);
+            await this._connection.InvokeAsync("SendToConnection", this.ConnectionId, this.ToConnection);
         }
 
         internal async Task SendToMe()
         {
-            await this._connection.InvokeAsync("Echo", this._toMe);
+            await this._connection.InvokeAsync("Echo", this.ToMe);
         }
 
         internal async Task SendToGroup()
         {
-            await this._connection.InvokeAsync("SendToGroup", this._groupName, this._toGroup);
+            await this._connection.InvokeAsync("SendToGroup", this.GroupName, this.ToGroup);
         }
 
         internal async Task SendToOthersInGroup()
         {
-            await this._connection.InvokeAsync("SendToOthersInGroup", this._groupName, this._toGroup);
+            await this._connection.InvokeAsync("SendToOthersInGroup", this.GroupName, this.ToGroup);
         }
 
         internal async Task JoinGroup()
         {
-            await this._connection.InvokeAsync("JoinGroup", this._groupName);
+            await this._connection.InvokeAsync("JoinGroup", this.GroupName);
         }
 
         internal async Task LeaveGroup()
         {
-            await this._connection.InvokeAsync("LeaveGroup", this._groupName);
+            await this._connection.InvokeAsync("LeaveGroup", this.GroupName);
         }
 
         internal async Task DoMultipleArgs()
@@ -181,8 +181,8 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
 
         internal async Task TellHubToDoStuff()
         {
-            this._objectHandle = this._connection.On<DemoData>("DemoMethodObject", this.DemoMethodObject);
-            this._listHandle = this._connection.On<DemoData[]>("DemoMethodList", this.DemoMethodList);
+            this.objectHandle = this._connection.On<DemoData>("DemoMethodObject", this.DemoMethodObject);
+            this.listHandle = this._connection.On<DemoData[]>("DemoMethodList", this.DemoMethodList);
             await this._connection.InvokeAsync("DoSomething");
         }
     }
