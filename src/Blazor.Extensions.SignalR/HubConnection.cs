@@ -1,6 +1,7 @@
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -104,43 +105,43 @@ namespace Blazor.Extensions
 
                      if (payloads.Length > 0)
                      {
-                         t1 = JsonSerializer.Parse<TResult1>(payloads[0]);
+                         t1 = JsonSerializer.Deserialize<TResult1>(payloads[0]);
                      }
                      if (payloads.Length > 1)
                      {
-                         t2 = JsonSerializer.Parse<TResult2>(payloads[1]);
+                         t2 = JsonSerializer.Deserialize<TResult2>(payloads[1]);
                      }
                      if (payloads.Length > 2)
                      {
-                         t3 = JsonSerializer.Parse<TResult3>(payloads[2]);
+                         t3 = JsonSerializer.Deserialize<TResult3>(payloads[2]);
                      }
                      if (payloads.Length > 3)
                      {
-                         t4 = JsonSerializer.Parse<TResult4>(payloads[3]);
+                         t4 = JsonSerializer.Deserialize<TResult4>(payloads[3]);
                      }
                      if (payloads.Length > 4)
                      {
-                         t5 = JsonSerializer.Parse<TResult5>(payloads[4]);
+                         t5 = JsonSerializer.Deserialize<TResult5>(payloads[4]);
                      }
                      if (payloads.Length > 5)
                      {
-                         t6 = JsonSerializer.Parse<TResult6>(payloads[5]);
+                         t6 = JsonSerializer.Deserialize<TResult6>(payloads[5]);
                      }
                      if (payloads.Length > 6)
                      {
-                         t7 = JsonSerializer.Parse<TResult7>(payloads[6]);
+                         t7 = JsonSerializer.Deserialize<TResult7>(payloads[6]);
                      }
                      if (payloads.Length > 7)
                      {
-                         t8 = JsonSerializer.Parse<TResult8>(payloads[7]);
+                         t8 = JsonSerializer.Deserialize<TResult8>(payloads[7]);
                      }
                      if (payloads.Length > 8)
                      {
-                         t9 = JsonSerializer.Parse<TResult9>(payloads[8]);
+                         t9 = JsonSerializer.Deserialize<TResult9>(payloads[8]);
                      }
                      if (payloads.Length > 9)
                      {
-                         t10 = JsonSerializer.Parse<TResult10>(payloads[9]);
+                         t10 = JsonSerializer.Deserialize<TResult10>(payloads[9]);
                      }
 
                      return handler(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10);
