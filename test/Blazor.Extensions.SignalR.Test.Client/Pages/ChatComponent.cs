@@ -23,14 +23,14 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
 
         private IDisposable objectHandle;
         private IDisposable listHandle;
-        private IDisposable multiArgsHandle;
-        private IDisposable multiArgsComplexHandle;
-        private IDisposable byteArrayHandle;
-        private HubConnection connection;
+        private IDisposable _multiArgsHandle;
+        private IDisposable _multiArgsComplexHandle;
+        private IDisposable _byteArrayHandle;
+        private HubConnection _connection;
 
         protected override async Task OnInitAsync()
         {
-            this.connection = this._hubConnectionBuilder
+            this._connection = this._hubConnectionBuilder
                 .WithUrl("/chathub",
                 opt =>
                 {
@@ -47,13 +47,13 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
                 //.AddMessagePackProtocol()
                 .Build();
 
-            this.connection.On<string>("Send", this.Handle);
-            this.connection.OnClose(exc =>
+            this._connection.On<string>("Send", this.Handle);
+            this._connection.OnClose(exc =>
             {
                 Console.WriteLine("Connection was closed! " + exc.ToString());
                 return Task.CompletedTask;
             });
-            await this.connection.StartAsync();
+            await this._connection.StartAsync();
         }
 
         public Task DemoMethodObject(object data)
@@ -77,7 +77,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         public Task DemoMultipleArgs(string arg1, int arg2, string arg3, int arg4)
         {
             Console.WriteLine("Got Multiple Args!");
-            this.multiArgsHandle.Dispose();
+            this._multiArgsHandle.Dispose();
 
             return this.HandleArgs(arg1, arg2, arg3, arg4);
         }
@@ -85,7 +85,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         public Task DemoMultipleArgsComplex(object arg1, object arg2)
         {
             Console.WriteLine("Got Multiple Args Complex!");
-            this.multiArgsComplexHandle.Dispose();
+            this._multiArgsComplexHandle.Dispose();
 
             return this.HandleArgs(arg1, arg2);
         }
@@ -93,7 +93,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         public Task DemoByteArrayArg(byte[] array)
         {
             Console.WriteLine("Got byte array!");
-            this.byteArrayHandle.Dispose();
+            this._byteArrayHandle.Dispose();
 
             return this.HandleArgs(BitConverter.ToString(array));
         }
@@ -125,65 +125,65 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
 
         internal async Task Broadcast()
         {
-            await this.connection.InvokeAsync("Send", this.ToEverybody);
+            await this._connection.InvokeAsync("Send", this.ToEverybody);
         }
 
         internal async Task SendToOthers()
         {
-            await this.connection.InvokeAsync("SendToOthers", this.ToEverybody);
+            await this._connection.InvokeAsync("SendToOthers", this.ToEverybody);
         }
 
         internal async Task SendToConnection()
         {
-            await this.connection.InvokeAsync("SendToConnection", this.ConnectionId, this.ToConnection);
+            await this._connection.InvokeAsync("SendToConnection", this.ConnectionId, this.ToConnection);
         }
 
         internal async Task SendToMe()
         {
-            await this.connection.InvokeAsync("Echo", this.ToMe);
+            await this._connection.InvokeAsync("Echo", this.ToMe);
         }
 
         internal async Task SendToGroup()
         {
-            await this.connection.InvokeAsync("SendToGroup", this.GroupName, this.ToGroup);
+            await this._connection.InvokeAsync("SendToGroup", this.GroupName, this.ToGroup);
         }
 
         internal async Task SendToOthersInGroup()
         {
-            await this.connection.InvokeAsync("SendToOthersInGroup", this.GroupName, this.ToGroup);
+            await this._connection.InvokeAsync("SendToOthersInGroup", this.GroupName, this.ToGroup);
         }
 
         internal async Task JoinGroup()
         {
-            await this.connection.InvokeAsync("JoinGroup", this.GroupName);
+            await this._connection.InvokeAsync("JoinGroup", this.GroupName);
         }
 
         internal async Task LeaveGroup()
         {
-            await this.connection.InvokeAsync("LeaveGroup", this.GroupName);
+            await this._connection.InvokeAsync("LeaveGroup", this.GroupName);
         }
 
         internal async Task DoMultipleArgs()
         {
-            this.multiArgsHandle = this.connection.On<string, int, string, int>("DemoMultiArgs", this.DemoMultipleArgs);
-            this.multiArgsComplexHandle = this.connection.On<DemoData, DemoData[]>("DemoMultiArgs2", this.DemoMultipleArgsComplex);
-            await this.connection.InvokeAsync("DoMultipleArgs");
-            await this.connection.InvokeAsync("DoMultipleArgsComplex");
+            this._multiArgsHandle = this._connection.On<string, int, string, int>("DemoMultiArgs", this.DemoMultipleArgs);
+            this._multiArgsComplexHandle = this._connection.On<DemoData, DemoData[]>("DemoMultiArgs2", this.DemoMultipleArgsComplex);
+            await this._connection.InvokeAsync("DoMultipleArgs");
+            await this._connection.InvokeAsync("DoMultipleArgsComplex");
         }
 
         internal async Task DoByteArrayArg()
         {
-            this.byteArrayHandle = this.connection.On<byte[]>("DemoByteArrayArg", this.DemoByteArrayArg);
-            var array = await this.connection.InvokeAsync<byte[]>("DoByteArrayArg");
+            this._byteArrayHandle = this._connection.On<byte[]>("DemoByteArrayArg", this.DemoByteArrayArg);
+            var array = await this._connection.InvokeAsync<byte[]>("DoByteArrayArg");
 
             Console.WriteLine("Got byte returned from hub method array: {0}", BitConverter.ToString(array));
         }
 
         internal async Task TellHubToDoStuff()
         {
-            this.objectHandle = this.connection.On<DemoData>("DemoMethodObject", this.DemoMethodObject);
-            this.listHandle = this.connection.On<DemoData[]>("DemoMethodList", this.DemoMethodList);
-            await this.connection.InvokeAsync("DoSomething");
+            this.objectHandle = this._connection.On<DemoData>("DemoMethodObject", this.DemoMethodObject);
+            this.listHandle = this._connection.On<DemoData[]>("DemoMethodList", this.DemoMethodList);
+            await this._connection.InvokeAsync("DoSomething");
         }
     }
 }
