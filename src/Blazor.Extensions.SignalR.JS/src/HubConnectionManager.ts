@@ -1,6 +1,6 @@
-import * as signalR from "@aspnet/signalr";
-import * as sianglRMessagePack from "@aspnet/signalr-protocol-msgpack";
-import { HttpTransportType, LogLevel } from "@aspnet/signalr";
+import * as signalR from "@microsoft/signalr";
+import * as sianglRMessagePack from "@microsoft/signalr-protocol-msgpack";
+import { HttpTransportType, LogLevel } from "@microsoft/signalr";
 
 type DotNetType = {
   invokeMethod<T>(assemblyName: string, methodIdentifier: string, ...args: any[]): T,
