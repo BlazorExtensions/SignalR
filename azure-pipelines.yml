@@ -1,0 +1,32 @@
+queue: 'Hosted VS2017'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+
+  - task: DotNetCoreInstaller@0
+    inputs:
+      packageType: 'sdk'
+      version: '3.0.100-preview7-012821'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'restore'
+      projects: '**/*.csproj'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'build'
+      projects: '**/*.csproj'
+      arguments: '--configuration $(buildConfiguration)'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: pack
+      packagesToPack: 'src/Blazor.Extensions.SignalR/*.csproj'
+      configuration: '$(buildConfiguration)'
+      versioningScheme: byPrereleaseNumber
+      majorVersion: '0'
+      minorVersion: '1'
+      patchVersion: '0'
