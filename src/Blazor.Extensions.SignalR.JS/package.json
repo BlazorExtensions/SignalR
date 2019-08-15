@@ -15,7 +15,7 @@
     "webpack-cli": "3.3.6"
   },
   "dependencies": {
-    "@microsoft/signalr": "3.0.0-preview7.19365.7",
-    "@microsoft/signalr-protocol-msgpack": "3.0.0-preview7.19365.7"
+    "@microsoft/signalr": "3.0.0-preview8.19405.7",
+    "@microsoft/signalr-protocol-msgpack": "3.0.0-preview8.19405.7"
   }
 }
