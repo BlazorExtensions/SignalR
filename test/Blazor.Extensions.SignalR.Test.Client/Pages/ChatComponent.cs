@@ -28,7 +28,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         private IDisposable byteArrayHandle;
         private HubConnection connection;
 
-        protected override async Task OnInitAsync()
+        protected override async Task OnInitializedAsync()
         {
             this.connection = this._hubConnectionBuilder
                 .WithUrl("/chathub",
