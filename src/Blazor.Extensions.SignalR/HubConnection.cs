@@ -34,12 +34,12 @@ namespace Blazor.Extensions
             this.InternalConnectionId = Guid.NewGuid().ToString();
             runtime.InvokeSync<object>(CREATE_CONNECTION_METHOD,
                 this.InternalConnectionId,
-                DotNetObjectRef.Create(this.Options));
+                DotNetObjectReference.Create(this.Options));
         }
 
 
-        public Task StartAsync() => this.runtime.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);
-        public Task StopAsync() => this.runtime.InvokeAsync<object>(STOP_CONNECTION_METHOD, this.InternalConnectionId);
+        public ValueTask<object> StartAsync() => this.runtime.InvokeAsync<object>(START_CONNECTION_METHOD, this.InternalConnectionId);
+        public ValueTask<object> StopAsync() => this.runtime.InvokeAsync<object>(STOP_CONNECTION_METHOD, this.InternalConnectionId);
 
         public IDisposable On<TResult1>(string methodName, Func<TResult1, Task> handler)
             => this.On<TResult1, object, object, object, object, object, object, object, object, object>(methodName,
@@ -167,7 +167,7 @@ namespace Blazor.Extensions
                 };
             }
 
-            this.runtime.InvokeSync<object>(ON_METHOD, this.InternalConnectionId, DotNetObjectRef.Create(callback));
+            this.runtime.InvokeSync<object>(ON_METHOD, this.InternalConnectionId, DotNetObjectReference.Create(callback));
         }
 
         internal void RemoveHandle(string methodName, string callbackId)
@@ -193,13 +193,13 @@ namespace Blazor.Extensions
             this.closeCallback = new HubCloseCallback(callback);
             this.runtime.InvokeSync<object>(ON_CLOSE_METHOD,
                 this.InternalConnectionId,
-                DotNetObjectRef.Create(this.closeCallback));
+                DotNetObjectReference.Create(this.closeCallback));
         }
 
-        public Task InvokeAsync(string methodName, params object[] args) =>
+        public ValueTask<object> InvokeAsync(string methodName, params object[] args) =>
             this.runtime.InvokeAsync<object>(INVOKE_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
 
-        public Task<TResult> InvokeAsync<TResult>(string methodName, params object[] args) =>
+        public ValueTask<TResult> InvokeAsync<TResult>(string methodName, params object[] args) =>
             this.runtime.InvokeAsync<TResult>(INVOKE_WITH_RESULT_ASYNC_METHOD, this.InternalConnectionId, methodName, args);
 
         public void Dispose() => this.runtime.InvokeSync<object>(REMOVE_CONNECTION_METHOD, this.InternalConnectionId);
