@@ -1,6 +1,7 @@
 @page "/"
 @page "/chat"
 @inherits ChatComponent
+@using Microsoft.AspNetCore.Components.Web
 
 <h4>Serialization Test</h4>
 <form class="form-inline">
@@ -38,8 +39,8 @@
 <h4>To Connection</h4>
 <form class="form-inline">
     <div class="input-prepend input-append">
-        <input type="text" name="connection-message" id="connection-message-text" placeholder="Type a message"@bind=@ToConnection />
-        <input type="text" name="connection-id" id="connection-id" placeholder="Type a connection id"@bind=@ConnectionId />
+        <input type="text" name="connection-message" id="connection-message-text" placeholder="Type a message" @bind=@ToConnection />
+        <input type="text" name="connection-id" id="connection-id" placeholder="Type a connection id" @bind=@ConnectionId />
         <input type="button" id="connection-send" class="btn" value="Send to Connection" @onclick=@SendToConnection />
     </div>
 </form>
@@ -47,7 +48,7 @@
 <h4>To Me</h4>
 <form class="form-inline">
     <div class="input-append">
-        <input type="text" id="me-message-text" placeholder="Type a message"@bind=@ToMe />
+        <input type="text" id="me-message-text" placeholder="Type a message" @bind=@ToMe />
         <input type="button" id="send" class="btn" value="Send to Me" @onclick=@SendToMe />
     </div>
 </form>
@@ -55,8 +56,8 @@
 <h4>Group Actions</h4>
 <form class="form-inline">
     <div class="input-prepend input-append">
-        <input type="text" name="group-message" id="group-message-text" placeholder="Type a message"@bind=@ToGroup />
-        <input type="text" name="group-name" id="group-name" placeholder="Type a group name"@bind=@GroupName />
+        <input type="text" name="group-message" id="group-message-text" placeholder="Type a message" @bind=@ToGroup />
+        <input type="text" name="group-name" id="group-name" placeholder="Type a group name" @bind=@GroupName />
         <input type="button" id="groupmsg" class="btn" value="Send to Group" @onclick=@SendToGroup />
         <input type="button" id="others-groupmsg" class="btn" value="Send to Others in Group" @onclick=@SendToOthersInGroup />
         <input type="button" id="join-group" class="btn" value="Join Group" @onclick=@JoinGroup />
