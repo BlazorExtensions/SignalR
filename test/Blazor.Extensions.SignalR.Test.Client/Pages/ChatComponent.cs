@@ -108,7 +108,18 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         private Task Handle(object msg)
         {
             Console.WriteLine(msg);
-            this.Messages.Add(msg.ToString());
+            if(msg is DemoData[])
+            {
+                var demoDatas = msg as DemoData[];
+                foreach(var demoData in demoDatas)
+                {
+                    this.Messages.Add($"demoData.id({demoData.Id}) | demoData.Data({demoData.Data}) | demoData.DateTime({demoData.DateTime}) | demoData.DecimalData({demoData.DecimalData}) | demoData.Bool({demoData.Bool})");
+                }
+            }
+            else
+            {
+                this.Messages.Add(msg.ToString());
+            }
             this.StateHasChanged();
             return Task.CompletedTask;
         }

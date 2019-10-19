@@ -43,8 +43,8 @@ namespace Blazor.Extensions.SignalR.Test.Server.Hubs
 
         public Task DoMultipleArgsComplex()
         {
-            return this.Clients.All.SendAsync("DemoMultiArgs2", new DemoData { Id = 1, Data = "Demo Data" },
-                Enumerable.Range(1, 10).Select(x => new DemoData { Id = x, Data = $"Demo Data #{x}" }).ToList());
+            return this.Clients.All.SendAsync("DemoMultiArgs2", new DemoData { Id = 1, Data = "Demo Data", DecimalData = 0.000000001M, DateTime = DateTime.UtcNow, Bool = true },
+                Enumerable.Range(1, 10).Select(x => new DemoData { Id = x, Data = $"Demo Data #{x}", DecimalData = x * 0.000000001M , DateTime = DateTime.UtcNow.AddSeconds(-x), Bool = (x % 2 == 0) }).ToList());
         }
 
         public Task Send(string message)
