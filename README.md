@@ -1,4 +1,4 @@
-[![Build status](https://dotnet-ci.visualstudio.com/DotnetCI/_apis/build/status/Blazor-Extensions-SignalR-CI?branch=master)](https://dotnet-ci.visualstudio.com/DotnetCI/_build/latest?definitionId=5&branch=master)
+[![Build](https://github.com/BlazorExtensions/SignalR/workflows/CI/badge.svg)](https://github.com/BlazorExtensions/SignalR/actions)
 [![Package Version](https://img.shields.io/nuget/v/Blazor.Extensions.SignalR.svg)](https://www.nuget.org/packages/Blazor.Extensions.SignalR)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Blazor.Extensions.SignalR.svg)](https://www.nuget.org/packages/Blazor.Extensions.SignalR)
 [![License](https://img.shields.io/github/license/BlazorExtensions/SignalR.svg)](https://github.com/BlazorExtensions/SignalR/blob/master/LICENSE)
