@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Blazor.Extensions.SignalR.Test.Server.Hubs
 {
-    [Authorize(JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     public class ChatHub : Hub
     {
         public async Task DoSomething()

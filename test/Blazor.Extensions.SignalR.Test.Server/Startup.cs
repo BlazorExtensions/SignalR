@@ -18,13 +18,13 @@ using System.Net.Mime;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
+using System.Text;
 
 namespace Blazor.Extensions.SignalR.Test.Server
 {
     public class Startup
     {
-        public static readonly SymmetricSecurityKey SecurityKey = new SymmetricSecurityKey(Guid.NewGuid().ToByteArray());
-        public static readonly JwtSecurityTokenHandler JwtTokenHandler = new JwtSecurityTokenHandler();
+        public const string SECRET = "THIS IS OUR AWESOME SUPER SECRET!!!";
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
@@ -36,44 +36,41 @@ namespace Blazor.Extensions.SignalR.Test.Server
                 //.AddMessagePackProtocol();
                 .AddJsonProtocol();
 
-            services.AddAuthorization(options =>
+            services.AddAuthentication(opt =>
             {
-                options.AddPolicy(JwtBearerDefaults.AuthenticationScheme, policy =>
+                opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(opt =>
+            {
+                opt.RequireHttpsMetadata = false;
+                opt.SaveToken = true;
+                opt.TokenValidationParameters = new TokenValidationParameters
                 {
-                    policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
-                    policy.RequireClaim(ClaimTypes.NameIdentifier);
-                });
-            });
-
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SECRET)),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
+                opt.Events = new JwtBearerEvents
                 {
-                    options.TokenValidationParameters =
-                    new TokenValidationParameters
+                    OnMessageReceived = context =>
                     {
-                        LifetimeValidator = (before, expires, token, parameters) => expires > DateTime.UtcNow,
-                        ValidateAudience = false,
-                        ValidateIssuer = false,
-                        ValidateActor = false,
-                        ValidateLifetime = true,
-                        IssuerSigningKey = SecurityKey
-                    };
+                        var accessToken = context.Request.Query["access_token"];
 
-                    options.Events = new JwtBearerEvents
-                    {
-                        OnMessageReceived = context =>
+                        // If the request is for our hub...
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (path.StartsWithSegments("/chathub")))
                         {
-                            var accessToken = context.Request.Query["access_token"];
-
-                            if (!string.IsNullOrEmpty(accessToken) &&
-                                (context.HttpContext.WebSockets.IsWebSocketRequest || context.Request.Headers["Accept"] == "text/event-stream"))
-                            {
-                                context.Token = context.Request.Query["access_token"];
-                            }
-                            return Task.CompletedTask;
+                            // Read the token out of the query string
+                            context.Token = accessToken;
                         }
-                    };
-                });
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+            services.AddAuthorization();
 
             services.Configure<CookiePolicyOptions>(options =>
             {
@@ -106,14 +103,12 @@ namespace Blazor.Extensions.SignalR.Test.Server
                 app.UseHsts();
             }
 
+            app.UseRouting();
+
+            app.UseAuthentication();
             app.UseAuthorization();
-            app.UseHttpsRedirection();
-            app.UseCookiePolicy();
-            app.UseCors("CorsPolicy");
 
             app.UseClientSideBlazorFiles<Client.Startup>();
-
-            app.UseRouting();
 
             app.UseEndpoints(endpoints =>
             {

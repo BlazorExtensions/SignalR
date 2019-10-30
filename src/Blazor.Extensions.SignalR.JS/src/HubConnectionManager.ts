@@ -31,7 +31,7 @@ export class HubConnectionManager {
       skipNegotiation: httpConnectionOptions.invokeMethod<boolean>('get_SkipNegotiation')
     };
 
-    if (httpConnectionOptions.invokeMethod<true>('HasAccessTokenFactory')) {
+    if (httpConnectionOptions.invokeMethod<boolean>('HasAccessTokenFactory')) {
       options.accessTokenFactory = () => {
         return new Promise<string>(async (resolve, reject) => {
           const token = await httpConnectionOptions.invokeMethodAsync<string>('GetAccessToken');
@@ -49,7 +49,7 @@ export class HubConnectionManager {
     let connectionBuilder = new signalR.HubConnectionBuilder()
       .withUrl(url, options);
 
-    if (httpConnectionOptions.invokeMethod<true>('get_EnableMessagePack')) {
+    if (httpConnectionOptions.invokeMethod<boolean>('get_EnableMessagePack')) {
       connectionBuilder
         .withHubProtocol(new sianglRMessagePack.MessagePackHubProtocol());
     }
