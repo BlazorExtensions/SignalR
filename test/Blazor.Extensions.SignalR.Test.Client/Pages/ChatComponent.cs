@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -12,7 +13,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
     {
         [Inject] private HttpClient _http { get; set; }
         [Inject] private HubConnectionBuilder _hubConnectionBuilder { get; set; }
-//        [Inject] private ILogger<ChatComponent> _logger { get; set; }
+        //        [Inject] private ILogger<ChatComponent> _logger { get; set; }
         internal string ToEverybody { get; set; }
         internal string ToConnection { get; set; }
         internal string ConnectionId { get; set; }
@@ -108,13 +109,14 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         private Task Handle(object msg)
         {
             Console.WriteLine(msg);
-            if(msg is DemoData[])
+            if (msg is DemoData[])
             {
                 var demoDatas = msg as DemoData[];
-                foreach(var demoData in demoDatas)
-                {
-                    this.Messages.Add($"demoData.id({demoData.Id}) | demoData.Data({demoData.Data}) | demoData.DateTime({demoData.DateTime}) | demoData.DecimalData({demoData.DecimalData}) | demoData.Bool({demoData.Bool})");
-                }
+                DumpData(demoDatas);
+            }
+            else if (msg is DemoData)
+            {
+                DumpData(msg as DemoData);
             }
             else
             {
@@ -122,6 +124,14 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
             }
             this.StateHasChanged();
             return Task.CompletedTask;
+        }
+
+        private void DumpData(params DemoData[] arr)
+        {
+            foreach (var demoData in arr)
+            {
+                this.Messages.Add($"demoData.id({demoData.Id}) | demoData.Data({demoData.Data}) | demoData.DateTime({demoData.DateTime}) | demoData.DecimalData({demoData.DecimalData}) | demoData.Bool({demoData.Bool})");
+            }
         }
 
         private Task HandleArgs(params object[] args)

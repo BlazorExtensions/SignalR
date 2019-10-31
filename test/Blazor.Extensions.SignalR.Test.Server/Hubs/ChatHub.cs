@@ -13,8 +13,9 @@ namespace Blazor.Extensions.SignalR.Test.Server.Hubs
     {
         public async Task DoSomething()
         {
-            await this.Clients.All.SendAsync("DemoMethodObject", new DemoData { Id = 1, Data = "Demo Data" });
-            await this.Clients.All.SendAsync("DemoMethodList", Enumerable.Range(1, 10).Select(x => new DemoData { Id = x, Data = $"Demo Data #{x}" }).ToList());
+            await this.Clients.All.SendAsync("DemoMethodObject", new DemoData { Id = 1, Data = "Demo Data", DateTime = DateTime.UtcNow, DecimalData = 1.98M, Bool = true });
+            await this.Clients.All.SendAsync("DemoMethodList",
+                Enumerable.Range(1, 10).Select(x => new DemoData { Id = x, Data = $"Demo Data #{x}", DateTime = DateTime.UtcNow, DecimalData = 2.2M, Bool = true }).ToList());
         }
 
         public override async Task OnConnectedAsync()
@@ -44,7 +45,7 @@ namespace Blazor.Extensions.SignalR.Test.Server.Hubs
         public Task DoMultipleArgsComplex()
         {
             return this.Clients.All.SendAsync("DemoMultiArgs2", new DemoData { Id = 1, Data = "Demo Data", DecimalData = 0.000000001M, DateTime = DateTime.UtcNow, Bool = true },
-                Enumerable.Range(1, 10).Select(x => new DemoData { Id = x, Data = $"Demo Data #{x}", DecimalData = x * 0.000000001M , DateTime = DateTime.UtcNow.AddSeconds(-x), Bool = (x % 2 == 0) }).ToList());
+                Enumerable.Range(1, 10).Select(x => new DemoData { Id = x, Data = $"Demo Data #{x}", DecimalData = x * 0.000000001M, DateTime = DateTime.UtcNow.AddSeconds(-x), Bool = (x % 2 == 0) }).ToList());
         }
 
         public Task Send(string message)
