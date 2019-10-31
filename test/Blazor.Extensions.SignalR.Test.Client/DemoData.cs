@@ -19,5 +19,14 @@ namespace Blazor.Extensions.SignalR.Test.Client
 
         [JsonPropertyName("bool")]
         public bool Bool { get; set; }
+
+        [JsonPropertyName("enumData")]
+        public EnumType EnumData { get; set; }
+    }
+
+    public enum EnumType : uint
+    {
+        A,
+        B
     }
 }

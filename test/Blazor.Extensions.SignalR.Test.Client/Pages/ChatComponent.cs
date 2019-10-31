@@ -130,7 +130,7 @@ namespace Blazor.Extensions.SignalR.Test.Client.Pages
         {
             foreach (var demoData in arr)
             {
-                this.Messages.Add($"demoData.id({demoData.Id}) | demoData.Data({demoData.Data}) | demoData.DateTime({demoData.DateTime}) | demoData.DecimalData({demoData.DecimalData}) | demoData.Bool({demoData.Bool})");
+                this.Messages.Add($"demoData.id({demoData.Id}) | demoData.Data({demoData.Data}) | demoData.DateTime({demoData.DateTime}) | demoData.DecimalData({demoData.DecimalData}) | demoData.Bool({demoData.Bool}) | demoData.EnumData({demoData.EnumData})");
             }
         }
 
