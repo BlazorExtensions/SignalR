@@ -1,5 +1,6 @@
-using System;
 using Microsoft.JSInterop;
+using System;
+using System.Text.Json;
 
 namespace Blazor.Extensions
 {
@@ -10,6 +11,7 @@ namespace Blazor.Extensions
         private IJSRuntime _runtime;
 
         internal HttpConnectionOptions Options { get; set; } = new HttpConnectionOptions();
+        internal JsonSerializerOptions JsonOptions { get; set; } = new JsonSerializerOptions();
 
         public HubConnectionBuilder(IJSRuntime runtime)
         {
@@ -31,7 +33,7 @@ namespace Blazor.Extensions
 
             this._hubConnectionBuilt = true;
 
-            return new HubConnection(this._runtime, this.Options);
+            return new HubConnection(this._runtime, this.Options, this.JsonOptions);
         }
     }
 
@@ -53,6 +55,20 @@ namespace Blazor.Extensions
 
             hubConnectionBuilder.Options.Url = url;
             configureHttpOptions?.Invoke(hubConnectionBuilder.Options);
+            return hubConnectionBuilder;
+        }
+
+        /// <summary>
+        /// Configures the <see cref="HubConnection"/> to use JSON serialization settings, when deserializing messages.
+        /// </summary>
+        /// <param name="hubConnectionBuilder">The <see cref="HubConnectionBuilder"/> to configure.</param>
+        /// <param name="options">The serialization options <see cref="JsonSerializerOptions"/></param>
+        /// <returns></returns>
+        public static HubConnectionBuilder WithJsonOptions(this HubConnectionBuilder hubConnectionBuilder, JsonSerializerOptions options)
+        {
+            if (hubConnectionBuilder is null) throw new ArgumentNullException(nameof(hubConnectionBuilder));
+
+            hubConnectionBuilder.JsonOptions = options;
             return hubConnectionBuilder;
         }
 

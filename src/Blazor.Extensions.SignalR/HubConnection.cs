@@ -20,6 +20,7 @@ namespace Blazor.Extensions
         private const string INVOKE_WITH_RESULT_ASYNC_METHOD = "BlazorExtensions.SignalR.InvokeWithResultAsync";
 
         internal HttpConnectionOptions Options { get; }
+        internal JsonSerializerOptions JsonOptions { get; }
         internal string InternalConnectionId { get; }
 
         private Dictionary<string, Dictionary<string, HubMethodCallback>> callbacks = new Dictionary<string, Dictionary<string, HubMethodCallback>>();
@@ -27,10 +28,11 @@ namespace Blazor.Extensions
         private HubCloseCallback closeCallback;
         private IJSRuntime runtime;
 
-        public HubConnection(IJSRuntime runtime, HttpConnectionOptions options)
+        public HubConnection(IJSRuntime runtime, HttpConnectionOptions options, JsonSerializerOptions jsonOptions = null)
         {
             this.runtime = runtime;
             this.Options = options;
+            this.JsonOptions = jsonOptions;
             this.InternalConnectionId = Guid.NewGuid().ToString();
             runtime.InvokeSync<object>(CREATE_CONNECTION_METHOD,
                 this.InternalConnectionId,
@@ -105,43 +107,43 @@ namespace Blazor.Extensions
 
                      if (payloads.Length > 0)
                      {
-                         t1 = JsonSerializer.Deserialize<TResult1>(payloads[0]);
+                         t1 = JsonSerializer.Deserialize<TResult1>(payloads[0], this.JsonOptions);
                      }
                      if (payloads.Length > 1)
                      {
-                         t2 = JsonSerializer.Deserialize<TResult2>(payloads[1]);
+                         t2 = JsonSerializer.Deserialize<TResult2>(payloads[1], this.JsonOptions);
                      }
                      if (payloads.Length > 2)
                      {
-                         t3 = JsonSerializer.Deserialize<TResult3>(payloads[2]);
+                         t3 = JsonSerializer.Deserialize<TResult3>(payloads[2], this.JsonOptions);
                      }
                      if (payloads.Length > 3)
                      {
-                         t4 = JsonSerializer.Deserialize<TResult4>(payloads[3]);
+                         t4 = JsonSerializer.Deserialize<TResult4>(payloads[3], this.JsonOptions);
                      }
                      if (payloads.Length > 4)
                      {
-                         t5 = JsonSerializer.Deserialize<TResult5>(payloads[4]);
+                         t5 = JsonSerializer.Deserialize<TResult5>(payloads[4], this.JsonOptions);
                      }
                      if (payloads.Length > 5)
                      {
-                         t6 = JsonSerializer.Deserialize<TResult6>(payloads[5]);
+                         t6 = JsonSerializer.Deserialize<TResult6>(payloads[5], this.JsonOptions);
                      }
                      if (payloads.Length > 6)
                      {
-                         t7 = JsonSerializer.Deserialize<TResult7>(payloads[6]);
+                         t7 = JsonSerializer.Deserialize<TResult7>(payloads[6], this.JsonOptions);
                      }
                      if (payloads.Length > 7)
                      {
-                         t8 = JsonSerializer.Deserialize<TResult8>(payloads[7]);
+                         t8 = JsonSerializer.Deserialize<TResult8>(payloads[7], this.JsonOptions);
                      }
                      if (payloads.Length > 8)
                      {
-                         t9 = JsonSerializer.Deserialize<TResult9>(payloads[8]);
+                         t9 = JsonSerializer.Deserialize<TResult9>(payloads[8], this.JsonOptions);
                      }
                      if (payloads.Length > 9)
                      {
-                         t10 = JsonSerializer.Deserialize<TResult10>(payloads[9]);
+                         t10 = JsonSerializer.Deserialize<TResult10>(payloads[9], this.JsonOptions);
                      }
 
                      return handler(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10);
