@@ -13,6 +13,7 @@ namespace Blazor.Extensions
         public bool EnableMessagePack { [JSInvokable]get; set; }
         public string Url { [JSInvokable]get; set; }
         public Func<Task<string>> AccessTokenProvider { get; set; }
+        public JsonHubProtocolOptions JsonHubProtocolOptions { get; set; } = new JsonHubProtocolOptions();
 
         [JSInvokable]
         public Task<string> GetAccessToken() => this.AccessTokenProvider?.Invoke();

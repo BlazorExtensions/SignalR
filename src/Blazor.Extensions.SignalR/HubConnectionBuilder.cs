@@ -67,5 +67,31 @@ namespace Blazor.Extensions
             hubConnectionBuilder.Options.EnableMessagePack = true;
             return hubConnectionBuilder;
         }
+
+        /// <summary>
+        /// Enables the Json protocol for SignalR.
+        /// </summary>
+        /// <param name="hubConnectionBuilder">The <see cref="HubConnectionBuilder"/> representing the SignalR server to add Json protocol support to. Disables MessagePack protocol support.</param>
+        /// <returns>The same instance of the <see cref="HubConnectionBuilder"/> for chaining.</returns>
+        public static HubConnectionBuilder AddJsonProtocol(this HubConnectionBuilder hubConnectionBuilder)
+        {
+            if (hubConnectionBuilder == null) throw new ArgumentNullException(nameof(hubConnectionBuilder));
+            hubConnectionBuilder.Options.EnableMessagePack = false;
+            return hubConnectionBuilder;
+        }
+
+        /// <summary>
+        /// Enables the Json protocol for SignalR.
+        /// </summary>
+        /// <param name="hubConnectionBuilder">The <see cref="HubConnectionBuilder"/> representing the SignalR server to add Json protocol support to. Disables MessagePack protocol support.</param>
+        /// <param name="configure">A delegate that can be used to configure the <see cref="JsonHubProtocolOptions"/>.</param>
+        /// <returns>The same instance of the <see cref="HubConnectionBuilder"/> for chaining.</returns>
+        public static HubConnectionBuilder AddJsonProtocol(this HubConnectionBuilder hubConnectionBuilder, Action<JsonHubProtocolOptions> configure)
+        {
+            if (hubConnectionBuilder == null) throw new ArgumentNullException(nameof(hubConnectionBuilder));
+            hubConnectionBuilder.Options.EnableMessagePack = false;
+            configure.Invoke(hubConnectionBuilder.Options.JsonHubProtocolOptions);
+            return hubConnectionBuilder;
+        }
     }
 }
