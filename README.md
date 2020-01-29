@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/BlazorExtensions/SignalR.svg)](https://github.com/BlazorExtensions/SignalR/blob/master/LICENSE)
 
 
-> *DEPRECATION NOTE*: This package is no longer required since [Blazor WebAssembly now supports SignalR Client](https://devblogs.microsoft.com/aspnet/blazor-webassembly-3-2-0-preview-1-release-now-available/). Users of this package should stop using it and use the official client instead.
+> **DEPRECATION NOTE**: This package is no longer required since [Blazor WebAssembly now supports SignalR Client](https://devblogs.microsoft.com/aspnet/blazor-webassembly-3-2-0-preview-1-release-now-available/). Users of this package should stop using it and use the official client instead.
 
 # Blazor Extensions
 
