@@ -9,10 +9,10 @@
   },
   "devDependencies": {
     "@types/emscripten": "0.0.34",
-    "ts-loader": "6.0.4",
+    "ts-loader": "9.4.2",
     "typescript": "3.5.3",
-    "webpack": "4.37.0",
-    "webpack-cli": "3.3.6"
+    "webpack": "5.75.0",
+    "webpack-cli": "5.0.1"
   },
   "dependencies": {
     "@microsoft/signalr": "3.0.0",
